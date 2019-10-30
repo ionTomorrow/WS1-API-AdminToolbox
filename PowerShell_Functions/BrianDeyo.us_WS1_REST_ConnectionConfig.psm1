@@ -156,9 +156,9 @@ function get-ws1SettingsFile {
 
     ###Check valid file. If file is OK display contents. If no file is found or no selection is made loop
     Do {
-        $ws1ConfigValid = test-ws1EnvConfigFile -configPath \config\ws1EnvConfig.csv
+        $ws1ConfigValid = test-ws1EnvConfigFile -configPath config\ws1EnvConfig.csv
         if ($ws1ConfigValid -eq $true) {
-            $ws1settings = import-csv "\config\ws1EnvConfig.csv"
+            $ws1settings = import-csv "config\ws1EnvConfig.csv"
                 Do {
                     Write-Host -ForegroundColor Yellow "     Currently detected WS1 Environments"    
                     foreach ($ws1Env in $WS1Settings) {
@@ -229,8 +229,8 @@ function import-ws1EnvConfigFile {
         $ws1ConfigValid = test-ws1EnvConfigFile -configPath $configPath
     
         if ($ws1ConfigValid = $true) {
-            Copy-Item $configPath \config\ws1EnvConfig.csv -Force
-            $Ws1EnvConfig = Get-Item \config\ws1EnvConfig.csv
+            Copy-Item $configPath config\ws1EnvConfig.csv -Force
+            $Ws1EnvConfig = Get-Item config\ws1EnvConfig.csv
         }
 
     }
