@@ -47,26 +47,37 @@ Function New-ws1RestConnection {
 
         ###Need to add code to validate creds are entered & fail gracefully if not
         Do {
-        $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
-        }
-        Until ($Credential -ne $nul)
+            $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
+        
+            write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
+
+        
+            ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
+            $testWs1Connection = test-ws1RestConnection -headers $headers
+            $testResults = ConvertFrom-Json $testWs1Connection.content
+
+            if ($testWs1Connection  -ne "FAIL") {
+            
+                Write-Host "Conntected to:"
+                foreach ($api in $testResults.Resources.Workspaces) {
+                    write-host -ForegroundColor Green "          " $api.location
+                }
+            }
+            elseif ($testResults.statusCode -eq 1005) {
+                write-host -ForegroundColor Yellow "     Invalid Credentials for environment. Please try again."
+            }
+            else {
+                write-host -ForegroundColor Red "Connection Failed to $headers.ws1ApiUri"
+            }
+
+        } Until ($testResults.statusCode -eq 200)
+        
         $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
         
         #New-Variable -Name headers -option AllScope
         $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri"}
 
-        write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
-
         
-        ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
-        $testWs1Connection = test-ws1RestConnection -headers $headers
-        if ($testWs1Connection  -ne "FAIL") {
-            $testResults = ConvertFrom-Json $testWs1Connection.content
-            Write-Host "Conntected to:"
-            foreach ($api in $testResults.Resources.Workspaces) {
-                write-host -ForegroundColor Green "          " $api.location
-            }
-        }
         else {
         [System.Windows.MessageBox]::Show('Error Connecting to Environment. Exiting dDaaS Environment. Please restart to continue.')
         [Environment]::Exit(1)
