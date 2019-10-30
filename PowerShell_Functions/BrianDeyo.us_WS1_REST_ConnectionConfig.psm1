@@ -40,7 +40,7 @@ Function New-ws1RestConnection {
         [Parameter(Mandatory=$true, Position=0)]
         [string]$apiUri,
         [Parameter(Mandatory=$true, Position=1)]
-        [string]$apikey
+        [string]$apikey,
         [Parameter(Mandatory=$false, Position=2)]
         [switch]$certAuth
         )
@@ -50,7 +50,10 @@ Function New-ws1RestConnection {
             $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
         
             write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
-
+            $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
+        
+            #Test the Headres build
+            $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri"}
         
             ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
             $testWs1Connection = test-ws1RestConnection -headers $headers
@@ -71,17 +74,11 @@ Function New-ws1RestConnection {
             }
 
         } Until ($testResults.statusCode -eq 200)
-        
-        $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
-        
-        #New-Variable -Name headers -option AllScope
-        $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri"}
 
         
-        else {
-        [System.Windows.MessageBox]::Show('Error Connecting to Environment. Exiting dDaaS Environment. Please restart to continue.')
-        [Environment]::Exit(1)
-        }
+
+        
+        
     return $headers
 }
 
