@@ -136,6 +136,52 @@ param (
 }
 
 
+
+<#
+Retrieve *all* devices from an Environment
+#>
+Function Search-ws1Devices {
+    param(
+        [Parameter(mandatory=$false, Position=0)][string]$user,
+        [Parameter(mandatory=$false, Position=1)][string]$model,
+        [Parameter(mandatory=$false, Position=2)][string]$platform,
+        [Parameter(mandatory=$false, Position=3)][dateTime]$lastSeen,
+        [Parameter(mandatory=$false, Position=4)][string]$ownership,
+        [Parameter(mandatory=$false, Position=5)][string]$lgid,
+        [Parameter(mandatory=$false, Position=6)][bool]$compliantStatus,
+        [Parameter(mandatory=$false, Position=7)][dateTime]$seenSince,
+        [Parameter(mandatory=$false, Position=8)][int]$page,
+        [Parameter(mandatory=$false, Position=9)][int]$pageSize,
+        [Parameter(mandatory=$false, Position=10)][string]$orderBy,
+        [Parameter(mandatory=$false, Position=11)][string]$sortOrder,
+        [Parameter(mandatory=$false, Position=12)][bool]$allRecords,
+        [Parameter(mandatory=$true, Position=13)][hashtable]$headers
+    )
+    #[System.Collections.ArrayList]$deviceDump = @()
+    $ws1EnvUri = $headers.ws1ApiUri
+    $totalDumpTime = Measure-command {
+
+    do {
+        $dev = $null
+        $pageRetrieveTime = Measure-command {
+            $dev = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/api/mdm/devices/search?lgid=$lgID"&"page=$page"&"pagesize=$pageSize -Headers $headers
+        }
+        $dumpListBuiltTime = measure-command {
+            
+            
+        }
+        write-host "Current batch retrieved" $dev.devices.count "devices" in $pageRetrieveTime
+        write-host "ListBuildTime" $dumpListBuiltTime
+        write-host "Total Devices retrieved:" $dev.device.Count "in" $totalDumpTime
+        $page++
+    }
+    until ($dev.devices.count -lt $pageSize)
+    }
+    return $dev.Devices
+}
+
+
+
 <#
 ###  Move Devices into a different OG
 #>

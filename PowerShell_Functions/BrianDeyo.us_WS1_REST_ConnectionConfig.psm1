@@ -66,14 +66,14 @@ Function New-ws1RestConnection {
                     write-host -ForegroundColor Green "          " $api.location
                 }
             }
-            elseif ($testResults.statusCode -eq 1005) {
+            elseif ($testWs1Connection.statusCode -eq 1005) {
                 write-host -ForegroundColor Yellow "     Invalid Credentials for environment. Please try again."
             }
             else {
                 write-host -ForegroundColor Red "Connection Failed to $headers.ws1ApiUri"
             }
 
-        } Until ($testResults.statusCode -eq 200)
+        } Until ($testWs1Connection.statusCode -eq 200)
 
         
 
@@ -93,10 +93,10 @@ function test-ws1RestConnection {
     }
     Catch  [System.Net.WebException] {
         $errorEvent = ConvertFrom-Json $_.ErrorDetails
-        if ($ws1connection.statusCode -eq "200") {
+        if ($ws1connection.statusCode -eq 200) {
             ###Connection is OK
         }
-        elseif  ($errorEvent.errorCode -eq "1005") {
+        elseif  ($errorEvent.errorCode -eq 1005) {
 
             [System.Windows.MessageBox]::Show('Error Validating Credentials. Exiting script before you lock your account out. (Also Deyo needs to add more code to prompt restarting)')
             $ws1connection = "FAIL"

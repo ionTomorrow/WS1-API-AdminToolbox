@@ -68,7 +68,12 @@ Function New-WS1User {
         [Parameter(Mandatory=$false, Position=14)]
             [int]$MessageTemplateId,
         [Parameter(Mandatory=$true, Position=15,ValueFromPipelineByPropertyName=$true)]
-            [Hashtable]$headers
+            [Hashtable]$headers,
+        [Parameter(Mandatory=$false, Position=16)]
+            [int]$StagingMode,
+        [Parameter(Mandatory=$false, Position=17)]
+            [ValidateSet("true","false")]
+            [string]$StagingEnabled
     )
 
 
@@ -88,7 +93,9 @@ Function New-WS1User {
     if ($LocationGroupId -ne $null) {$body.Add("LocationGroupId", $LocationGroupId)}
     if ($Role -ne $null) {$body.Add("Role", $Role)}
     if ($MessageType -ne $null) {$body.Add("MessageType", $MessageType)}
-    if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTypeId)}
+    if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTemplateId)}
+    if ($StagingMode -ne $null) {$body.add("StagingMode", $StagingMode)}
+    if ($StagingEnabled) {$body.add("DeviceStagingEnabled", $StagingEnabled)}
     
     $ws1UserAdd = Invoke-Restmethod -Method POST -Uri https://$WS1EnvUri/api/system/users/adduser -Body (ConvertTo-Json $body) -Headers $Headers
     return $ws1UserAdd
@@ -164,9 +171,12 @@ function set-ws1User {
         [Parameter(Mandatory=$false, Position=11)][ValidateSet("Email","SMS","None")]$MessageType,
         [Parameter(Mandatory=$false, Position=12)]$MessageTemplateId,
         [Parameter(Mandatory=$false, Position=13)]$ExternalId,
-        [Parameter(Mandatory=$true, Position=14)][Hashtable]$headers
+        [Parameter(Mandatory=$true, Position=14)][Hashtable]$headers,
+        [Parameter(Mandatory=$false, Position=16)][int]$StagingMode,
+        [Parameter(Mandatory=$false, Position=17)][ValidateSet("true","false")][string]$StagingEnabled
     )
 
+    $ws1EnvUri = $headers.ws1ApiUri
  ### Creation of JSON payload
 if ($userId -ne $null) {
     $body = @{}
@@ -182,6 +192,9 @@ if ($userId -ne $null) {
     if ($Role -ne $null) {$body.Add("Role", $Role)}
     if ($MessageType -ne $null) {$body.Add("MessageType", $MessageType)}
     if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTypeId)}
+    if ($StagingMode -ne $null) {$body.add("StagingMode", $StagingMode)}
+    if ($deviceStagingEnabled) {$body.add("deviceStagingEnabled", $deviceStagingEnabled)}
+    if ($deviceStagingType) {$body.add("deviceStagingEnabled", $deviceStagingType)}
 }
 
 $ws1user = Invoke-WebRequest -Uri https://$ws1EnvUri/api/system/users/$userId/update -Method POST -Body (ConvertTo-Json $body) -Headers $headers
