@@ -57,10 +57,10 @@ Function New-ws1RestConnection {
         
             ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
             $testWs1Connection = test-ws1RestConnection -headers $headers
-            $testResults = ConvertFrom-Json $testWs1Connection.content
+            
 
             if ($testWs1Connection  -ne "FAIL") {
-            
+            $testResults = ConvertFrom-Json $testWs1Connection.content
                 Write-Host "Conntected to:"
                 foreach ($api in $testResults.Resources.Workspaces) {
                     write-host -ForegroundColor Green "          " $api.location
@@ -93,13 +93,14 @@ function test-ws1RestConnection {
     }
     Catch  [System.Net.WebException] {
         $errorEvent = ConvertFrom-Json $_.ErrorDetails
-        if ($ws1connection.statusCode -eq 200) {
+        if ($ws1connection.statusCode -eq "200") {
             ###Connection is OK
+            
         }
-        elseif  ($errorEvent.errorCode -eq 1005) {
+        elseif  ($errorEvent.errorCode -eq "1005") {
 
-            [System.Windows.MessageBox]::Show('Error Validating Credentials. Exiting script before you lock your account out. (Also Deyo needs to add more code to prompt restarting)')
-            $ws1connection = "FAIL"
+            write-host -ForegroundColor Red "'Error Validating Credentials. Please enter credentials again. Script will fail to prevent lockout after 3 tries"
+            $ws1connection = $errorEvent.errorCode
         }
         else {
             $ws1connection = "FAIL"
@@ -285,7 +286,7 @@ function Update-ws1EnvConfigFile {
                 $ws1EnvName = read-host -prompt "Please type an easy-to remember name for the environment (UAT,PROD,etc.)"
                 $ws1EnvApi = read-host -Prompt "Please type or paste your API KEY"
                 $ws1EnvUri = read-host -Prompt "Please input the URL you are connecting to (example: xx123.awmdm.com)"
-                $ws1EnvConfigFile = "\config\ws1EnvConfig.csv"
+                $ws1EnvConfigFile = "config\ws1EnvConfig.csv"
                 $i=0
                 if (Test-Path $ws1EnvConfigFile) {
                     write-host "Appending new environment to existing settings config"
@@ -299,13 +300,13 @@ function Update-ws1EnvConfigFile {
                 
                 $WS1Env = New-Object psobject -Property @{ws1EnvNumber=$i;ws1EnvName=$ws1EnvName;ws1EnvApi=$ws1EnvApi;ws1EnvUri=$ws1EnvUri}
                 $WS1Env | Export-Csv -Path $WS1EnvConfigFile -NoTypeInformation -append
-                $ws1EnvConfig = "\config\ws1EnvConfig.csv"
+                $ws1EnvConfig = "config\ws1EnvConfig.csv"
                 
             }
             ###Locate Existing File
             2 {
                 import-ws1EnvConfigFile
-                $ws1EnvConfig = "\config\ws1EnvConfig.csv"
+                $ws1EnvConfig = "config\ws1EnvConfig.csv"
             }
             3 {
                 write-host "exiting"
@@ -314,11 +315,6 @@ function Update-ws1EnvConfigFile {
     }
     until ($ws1EnvConfig -ne $null)
 
-}
-
-
-function stop-dDaaS {
-    [Environment]::Exit(1)
 }
 
 
@@ -371,20 +367,20 @@ Function get-ws1LogFolder {
     $logDate = Get-Date -Format dd
 
     
-    If ((Test-Path -path \output\$logYear) -eq $false) {
-        New-Item -Path \output\$logYear -ItemType Directory | Out-Null
+    If ((Test-Path -path output\$logYear) -eq $false) {
+        New-Item -Path output\$logYear -ItemType Directory | Out-Null
     }
-    If ((Test-Path -Path \output\$logYear\$logMonth) -eq $false) {
-        New-Item -Path \output\$logYear\$logMonth -ItemType Directory | Out-Null
+    If ((Test-Path -Path output\$logYear\$logMonth) -eq $false) {
+        New-Item -Path output\$logYear\$logMonth -ItemType Directory | Out-Null
     }
-    If ((Test-Path -Path \output\$logYear\$logMonth\$logDate) -eq $false) {
-        New-Item -Path \output\$logYear\$logMonth\$logDate -ItemType Directory | Out-Null
+    If ((Test-Path -Path output\$logYear\$logMonth\$logDate) -eq $false) {
+        New-Item -Path output\$logYear\$logMonth\$logDate -ItemType Directory | Out-Null
     }
-    If ((Test-Path -Path \output\$logYear\$logMonth\$logDate\$ws1EnvUri) -eq $false) {
-        New-Item -Path \output\$logYear\$logMonth\$logDate\$ws1EnvUri -ItemType Directory | Out-Null
+    If ((Test-Path -Path output\$logYear\$logMonth\$logDate\$ws1EnvUri) -eq $false) {
+        New-Item -Path output\$logYear\$logMonth\$logDate\$ws1EnvUri -ItemType Directory | Out-Null
     }
     
-    $ws1LogPath = (Get-Item \output\$logYear\$logMonth\$logDate\$ws1EnvUri).FullName
+    $ws1LogPath = (Get-Item output\$logYear\$logMonth\$logDate\$ws1EnvUri).FullName
     return  $ws1LogPath;
 }
 
