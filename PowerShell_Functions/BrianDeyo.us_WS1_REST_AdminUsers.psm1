@@ -139,7 +139,7 @@ Function Set-ws1AdminUser {
         if ($MessageType -ne $null) {$body.Add("MessageType", $MessageType)}
         if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTemplateId)}
     }
-    $ws1AdminUpdate = Invoke-RestMethod -Method POST https://host/api/system/admins/$ws1adminId/update -Body (ConvertTo-Json $body) -Headers $headers
+    $ws1AdminUpdate = Invoke-RestMethod -Method POST https://$ws1Envuri/api/system/admins/$ws1adminId/update -Body (ConvertTo-Json $body) -Headers $headers
 
     return $ws1AdminUpdate
 }
