@@ -44,7 +44,8 @@ Function Import-WS1DeviceCsv {
     }
     Until ($validCsv -ne $false)
 
-    #return imported CSV as an object and the filehash if requested by script.
+    ###return imported CSV as an object and the filehash if requested by script.
+    ###Multiple values can be retrieved by accessing results like an array - https://social.technet.microsoft.com/Forums/ie/en-US/65d3bf7f-c710-498a-b535-46c64cbf92e7/return-multiple-values-in-powershell?forum=ITCG
     Return $inputList
     if ($GetFileHash) {
         Return $hashCsv
