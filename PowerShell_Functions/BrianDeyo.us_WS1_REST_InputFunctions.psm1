@@ -11,47 +11,44 @@ Importing a bad filename is going to result in an error and not return anything 
 Function Import-WS1DeviceCsv {
     param(
         [Parameter(Mandatory=$true,Position=0)][string]$defaultFilename,
-        [Parameter(Mandatory=$false,Position=1)][ref]$hash
+        [Parameter(Mandatory=$false,Position=1)][bool]$GetFileHash
     )
 
     <#Retrieve CSV from input directory #>
     write-host `n
-    Write-host "The expectation is that the .csv file with Serial Numbers is found in the \Input Scripting folder."
-    $snList = @()
-    $snCSV = $null
-
+    $inputPath = ((get-location).path)+"\input\"
+    Write-host -ForegroundColor Cyan "The expectation is that the .csv file with Serial Numbers is found in the $inputPath Scripting folder."
+    $inputList = @()
+    $inputCsv = $null
+    
+    
+    
     Do {
-    $snCsv = Read-Host -Prompt "please input name of the csv (with no .csv extensions) that includes the serial numbers. Press enter to use default file name ($defaultFilename)"
+    $inputCsv = Read-Host -Prompt "please input name of the csv (without .csv extension) that includes the serial numbers. Press enter to use default file name ($defaultFilename)"
     
-    if ($snCsv -ne "") { 
-        $snCsv = $SnCsv + ".csv"
+        Try {
+            if ($inputCsv -eq "") {
+                $inputCsv = $defaultFilename
+            }
+            
+            $validCsv = Test-Path -Path $inputpath$inputCsv".csv"
+            $verifyCsv = get-item -path $inputpath$inputCsv".csv" 
+            $verifyCsvFileName = $verifyCsv.name   
+            $hashCsv = ($verifyCsv | Get-FileHash -Algorithm SHA256).hash
+            $inputList = import-csv $inputPath$verifyCsvFilename
+        }
+        Catch {
+            write-host -ForegroundColor Red "Error Importing filename"
+            $validCsv = $false
+        }
     }
-    else {
-        write-host -ForegroundColor Cyan "Using Default Filename!"
-        $snCsv = $defaultFilename + ".csv"
-    }
-    }
-    Until ($snCSV -ne $null)
+    Until ($validCsv -ne $false)
 
-    ###Verify the .csv name is valid
-    $snCsvExists = Test-Path -path \input\$snCsv
-    
-    If ($snCsvExists -eq $true) {
-        $snList = import-csv \input\$snCsv
+    #return imported CSV as an object and the filehash if requested by script.
+    Return $inputList
+    if ($GetFileHash) {
+        Return $hashCsv
     }
-    ELSE {
-        write-host -ForegroundColor Red "ERROR: File $snCsv doesn't exist. Please check the name and rerun bulk delete script."
-        Write-Host -ForegroundColor Yellow "EXITING"
-    }
-
-    <#
-    #return updated hash if requested by script. Must fix this script to verify the filetype is actuall a .csv, then pipe that directly to get-filehash
-
-    $hash_obj = get-filehash \input\$snCsv
-    $hash.Value = $hash_obj.Hash
-    #>
-    Return $snList
-
 
 }
 

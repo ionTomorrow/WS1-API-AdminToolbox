@@ -62,7 +62,7 @@ Function New-WS1AdminUser {
         if ($TimeZone -ne $null) {$body.Add("TimeZone", $TimeZone)}
         if ($LocationGroupId -ne $null) {$body.Add("LocationGroupId", $LocationGroupId)}
         if ($Locale -ne $null) {$body.Add("Locale", $Locale)}
-        if ($Roles -ne $null) {$body.Add("Roles", (ConvertTo-Json $Roles))}
+        if ($Roles -ne $null) {$body.Add("Roles",$roles)}
         if ($MessageType -ne $null) {$body.Add("MessageType", $MessageType)}
         if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTemplateId)}
     }
