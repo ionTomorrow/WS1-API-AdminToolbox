@@ -157,26 +157,11 @@ Function Search-ws1Devices {
         [Parameter(mandatory=$false, Position=12)][bool]$allRecords,
         [Parameter(mandatory=$true, Position=13)][hashtable]$headers
     )
-    #[System.Collections.ArrayList]$deviceDump = @()
+    
     $ws1EnvUri = $headers.ws1ApiUri
-    $totalDumpTime = Measure-command {
-
-    do {
-        $dev = $null
-        $pageRetrieveTime = Measure-command {
-            $dev = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/api/mdm/devices/search?lgid=$lgID"&"page=$page"&"pagesize=$pageSize -Headers $headers
-        }
-        $dumpListBuiltTime = measure-command {
-            
-            
-        }
-        write-host "Current batch retrieved" $dev.devices.count "devices" in $pageRetrieveTime
-        write-host "ListBuildTime" $dumpListBuiltTime
-        write-host "Total Devices retrieved:" $dev.device.Count "in" $totalDumpTime
-        $page++
-    }
-    until ($dev.devices.count -lt $pageSize)
-    }
+    
+    $dev = $null
+    $dev = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/api/mdm/devices/search?lgid=$lgID"&"page=$page"&"pagesize=$pageSize -Headers $headers
     return $dev.Devices
 }
 

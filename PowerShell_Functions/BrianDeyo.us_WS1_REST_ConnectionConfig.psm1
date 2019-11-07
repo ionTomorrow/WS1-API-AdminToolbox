@@ -92,7 +92,12 @@ function test-ws1RestConnection {
         $ws1connection = Invoke-WebRequest -Uri https://$apiUri/api/system/info -Headers $headers
     }
     Catch  [System.Net.WebException] {
-        $errorEvent = ConvertFrom-Json $_.ErrorDetails
+        if ($_.ErrorDetails) {
+            $errorEvent = ConvertFrom-Json $_.ErrorDetails
+        }
+        else {
+            $errorEvent = $_.Exception
+        }
         if ($ws1connection.statusCode -eq "200") {
             ###Connection is OK
             
