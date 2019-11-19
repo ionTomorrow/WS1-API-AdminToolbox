@@ -314,7 +314,7 @@ Function set-ws1deviceMangedSettings {
     
 
     ###Execute settings and return values
-    $ws1ManagedSettings = invoke-webrequest -method POST -URI https://$ws1ApiUri/api/mdm/devices/managedsettings?searchby=$searchBy"&"id=$alternateId -body (ConvertTo-Json $Body) -headers $Headers
+    $ws1ManagedSettings = invoke-webrequest -method POST -URI https://$ws1ApiUri/api/mdm/devices/managedsettings?searchby=$searchBy"&"id=$deviceId -body (ConvertTo-Json $Body) -headers $Headers
     return $ws1ManagedSettings
 }
 
