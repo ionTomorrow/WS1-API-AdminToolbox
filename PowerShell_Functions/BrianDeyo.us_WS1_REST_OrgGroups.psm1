@@ -154,7 +154,7 @@ Function Find-WS1OrgGroup {
         [ValidateSet("Id","Name","GroupId","LocationGroupType")]
         [string]$orderBy,
         [Parameter(Mandatory=$false, Position=4)]
-        [ing]$page,
+        [int]$page,
         [Parameter(Mandatory=$false, Position=5)]
         [int]$pagesize,
         [Parameter(Mandatory=$false, Position=6)]
@@ -164,33 +164,10 @@ Function Find-WS1OrgGroup {
         [Hashtable]$headers
         )
 
-    ### Creation of JSON payload
-    $body = @{}
+       
+    $searchString = $ws1OgId
     
-    if ($ws1OgName -ne $null) {
-        $body.Add("Name", $awOgName)
-    }
-    if ($ws1OgType -ne $null) {
-        $body.Add("type", $ws1OgType)
-    }
-    if ($ws1OgId -ne $null) {
-        $body.Add("groupid", $ws1OgId)
-    }
-    if ($orderby -ne $null) {
-        $body.Add("orderby", $orderby)
-    }
-    if ($page -ne $null) {
-        $body.Add("page", $page)
-    if ($pagesize -ne $null) {
-        $body.Add("pagesize", $pagesize)
-    }
-    if ($sortOrder -ne $null) {
-        $body.Add("sortorder", $sortorder)
-    }
-    
-    
-
-    $ws1OgResults = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/Api/System/groups/$awOgParentId -Body (ConvertTo-Json $body) -Headers $Headers
-    return $newAwOg
-}
+    $ws1EnvUri = $headers.ws1ApiUri
+    $ws1OgResults = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/Api/System/groups/search?$searchString -Headers $Headers
+    return $ws1OgResults
 }

@@ -41,39 +41,17 @@ param (
 
 
 <# Send a QUERY or a SYNC command to a device #>
-Function Find-AwDevice {
+Function Find-ws1Device {
 param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$awHost,
-        [Parameter(Mandatory=$true, Position=1)]
-        [string]$id,
-        [Parameter(Mandatory=$true, Position=2)]
-        [ValidateSet("Query","SyncDevice")]
-        [string]$searchType,
-        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
-        [Hashtable]$headers
+        [Parameter(Mandatory=$true, Position=1)][string]$id,
+        [Parameter(Mandatory=$true, Position=2)][ValidateSet("Query","SyncDevice")][string]$searchType,
+        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
      )
-     $awFind = Invoke-RestMethod -Method POST -Uri https://$awhost/api/mdm/devices/$id/$searchType -Headers $headers
-     return $awFind
+     $ws1EnvUri = $headers.ws1ApiUri
+     $ws1Find = Invoke-RestMethod -Method POST -Uri https://$ws1EnvUri/api/mdm/devices/$id/$searchType -Headers $headers
+     return $ws1Find
 }
 
-Function Get-AwDevice {
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$awHost,
-        [Parameter(Mandatory=$true, Position=1)]
-        [ValidateSet("DeviceID","Macaddress","Udid","SerialNumber","ImeiNumber","EasId")]
-        [string]$SearchBy,
-        [Parameter(Mandatory=$true, Position=2)]
-        [string]$alternateId,
-        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
-        [Hashtable]$headers
-     )
-        
-  
-    $awDevice = Invoke-RestMethod -Method GET -uri https://$awHost/api/mdm/devices?searchby=$searchBy"&"id=$alternateId -Headers $Headers
-    return $awDevice
-}
 
 Function Get-WS1Device {
     param (
@@ -220,7 +198,7 @@ Function Remove-WS1Device {
     !!!! - Currently the API guide indicates SN, UDID, and Mac can be used to find device. However in practice seems to not be working: 2018-09-17
 #>
 
-Function Set-AwDevice {
+Function Set-ws1Device {
     <#
         .SYNOPSIS
             Edit Device Details
@@ -240,22 +218,17 @@ Function Set-AwDevice {
             Ownership type. Possible values includes : CorporateOwned, CorporateShared, or EmployeeOwned.
   #>
     param (
-        [Parameter(Mandatory=$true, Position=0)]
-            [string]$ws1Host,
-        [Parameter(Mandatory=$true, Position=1,ValueFromPipelineByPropertyName=$true)]
-            [ValidateSet("DeviceID","Macaddress","Udid","SerialNumber")]
-            [string]$idType,
-        [Parameter(Mandatory=$true, Position=2)]
-            [string]$deviceId,
-        [Parameter(Mandatory=$false, Position=3)]
-            [string]$assetNumber,
-        [Parameter(Mandatory=$false, Position=4)]
-            [string]$deviceFriendlyName,
-        [Parameter(Mandatory=$false, Position=5)]
-            [ValidateSet("CorporateOwned","CorporateShared","EmployeeOwned")]
-            [string]$ownership,
-        [Parameter(Mandatory=$true, Position=6,ValueFromPipelineByPropertyName=$true)]
-            [Hashtable]$headers
+        [Parameter(Mandatory=$true, Position=0)][string]$ws1Host,
+        [Parameter(Mandatory=$true, Position=1,ValueFromPipelineByPropertyName=$true)][ValidateSet("DeviceID","Macaddress","Udid","SerialNumber")][string]$idType,
+        [Parameter(Mandatory=$true, Position=2)][string]$deviceId,
+        [Parameter(Mandatory=$false, Position=3)][string]$assetNumber,
+        [Parameter(Mandatory=$false, Position=4)][string]$deviceFriendlyName,
+        [Parameter(Mandatory=$false, Position=5)][ValidateSet("CorporateOwned","CorporateShared","EmployeeOwned")][string]$ownership,
+        [Parameter(Mandatory=$false, Position=6)][bool]$bluetooth,
+        [Parameter(Mandatory=$false, Position=7)][bool]$voiceRoamingAllowed,
+        [Parameter(Mandatory=$false, Position=8)][bool]$dataRoamingAllowed,
+        [Parameter(Mandatory=$false, Position=9)][bool]$personalHotspotAllowed,
+        [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
     )
 
 
@@ -271,11 +244,12 @@ Function Set-AwDevice {
     if ($ownership -ne $null) {
         $body.Add("Ownership", $ownership)
     }
+    
      
     ### Different REST API URI depending on Unique Identifier used to pinpoint device
     if ($idType -eq "DeviceID") {
-        $ws1DeviceEdited = Invoke-Restmethod -Method PUT -Uri https://$ws1host/api/mdm/devices/$deviceId -Body (ConvertTo-Json $body) -Headers $Headers
-        return $awDeviceEdited
+        $ws1DeviceEdited = Invoke-Restmethod -Method PUT -Uri https://$ws1host/api/mdm/devices/$deviceId/editdevice -Body (ConvertTo-Json $body) -Headers $Headers
+        return $wsDeviceEdited
     }
     else {
         $ws1DeviceEdited = Invoke-Restmethod -Method PUT -Uri https://$ws1host/api/mdm/devices/$deviceId -Body (ConvertTo-Json $body) -Headers $Headers
@@ -284,6 +258,65 @@ Function Set-AwDevice {
 }
 
 
+Function set-ws1deviceMangedSettings {
+    <#
+        .SYNOPSIS
+            Short description
+        .DESCRIPTION
+            Long description
+        .PARAMETER ws1Host
+            Parameter description
+        .PARAMETER idType
+            Parameter description
+        .PARAMETER bluetooth
+            Parameter description
+        .PARAMETER voiceRoamingAllowed
+            Parameter description
+        .PARAMETER dataRoamingAllowed
+            Parameter description
+        .PARAMETER personalHotspotAllowed
+            Parameter description
+        .PARAMETER headers
+            Parameter description
+        .EXAMPLE
+            An example
+        .NOTES
+        General notes
+    #>
+
+    param (
+        [Parameter(Mandatory=$true, Position=1,ValueFromPipelineByPropertyName=$true)][ValidateSet("DeviceID","Macaddress","Udid","ImeiNumber","SerialNumber","EasId")][string]$searchBy,
+        [Parameter(Mandatory=$true, Position=2)][string]$deviceId,
+        [Parameter(Mandatory=$false, Position=2)][string][ValidateSet("on","off")]$bluetooth,
+        [Parameter(Mandatory=$false, Position=3)][string][ValidateSet("on","off")]$voiceRoamingAllowed,
+        [Parameter(Mandatory=$false, Position=4)][string][ValidateSet("on","off")]$dataRoamingAllowed,
+        [Parameter(Mandatory=$false, Position=5)][string][ValidateSet("on","off")]$personalHotspotAllowed,
+        [Parameter(Mandatory=$true, Position=6,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
+    )
+    $ws1ApiUri = $headers.ws1ApiUri
+    $body = @{}
+    switch ($bluetooth) {
+        off {$body.add("Bluetooth", "FALSE")}
+        on {$body.add("Bluetooth", "TRUE")}
+    }
+    switch ($voiceRoamingAllowed) {
+        off {$body.add("VoiceRoamingAllowed", "FALSE")}
+        on {$body.add("VoiceRoamingAllowed", "TRUE")}
+    }
+    switch ($dataRoamingAllowed) {
+        off {$body.add("DataRoamingAllowed", "FALSE")}
+        on {$body.add("DataRoamingAllowed", "TRUE")}
+    }
+    switch ($personalHotspotAllowed) {
+        off {$body.add("PersonalHotSpotAllowed", "FALSE")}
+        on {$body.add("PersonalHotSpotAllowed", "TRUE")}
+    }
+    
+
+    ###Execute settings and return values
+    $ws1ManagedSettings = invoke-webrequest -method POST -URI https://$ws1ApiUri/api/mdm/devices/managedsettings?searchby=$searchBy"&"id=$alternateId -body (ConvertTo-Json $Body) -headers $Headers
+    return $ws1ManagedSettings
+}
 
 
 ###############################

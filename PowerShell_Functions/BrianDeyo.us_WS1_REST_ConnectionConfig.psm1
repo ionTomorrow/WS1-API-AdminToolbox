@@ -333,7 +333,7 @@ function Update-ws1EnvConfigFile {
 ###############################>
 
 Function get-timestamp() {
-    $WS1LogTime = Get-Date -Format yyyyMMdd.HHmm.ssZ
+    $WS1LogTime = Get-Date -Format yyyyMMdd.HH.mm.ss
     return $WS1LogTime
 }
 
