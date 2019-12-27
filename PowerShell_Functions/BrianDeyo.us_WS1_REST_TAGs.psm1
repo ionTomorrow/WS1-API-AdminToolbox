@@ -5,7 +5,7 @@
 ###############################
 
 
-Function Get-WS1Tag {
+Function Search-WS1Tags {
     param(
         [Parameter(Mandatory=$true, Position=0)]
         [string]$WS1Host,
@@ -13,11 +13,13 @@ Function Get-WS1Tag {
         [string]$tagName,
         [Parameter(Mandatory=$false, Position=2)]
         [string]$GroupID,
-        [Parameter(Mandatory=$true, Position=3)]
+        [Parameter(Mandatory=$false, Position=3)]
         [ValidateSet("Device","General", "All")]
         [string]$tagType,
-        [Parameter(Mandatory=$true, Position=4)]
-        [int]$Resultsize,
+        [Parameter(Mandatory=$false, Position=4)]
+        [int]$page,
+        [Parameter(Mandatory=$false, Position=5)]
+        [int]$pageSize,
         [Parameter(Mandatory=$true, Position=5,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
         )
@@ -57,10 +59,10 @@ Function Get-WS1Tag {
         if (!$Resultsize) {}
         else {
             if (!$searchString) {
-                $searchString = $searchString + "pagesize=$Resultsize"
+                $searchString = $searchString + "pagesize=$pageSize"
             }
             else {
-                $searchString = $searchString + "&pagesize=$Resultsize"
+                $searchString = $searchString + "&pagesize=$pageSize"
             }
         }
         
@@ -73,20 +75,42 @@ Function Set-WS1DeviceTag {
         [Parameter(Mandatory=$true, Position=0)]
         [string]$WS1Host,
         [Parameter(Mandatory=$true, Position=1)]
-        [string]$WS1Tag,
+        [string]$tagId,
         [Parameter(Mandatory=$true, Position=2)]
-        [array]$WS1TagDevices,
+        [array]$addDevices,
         [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
     )
 
     ###Convert Array of DeviceIDs into JSON     
     $body = @{
-                BulkValues = @{Value = @($WS1TagDevices)}
+                BulkValues = @{Value = @($addDevices)}
             }
 
-    $WS1TagAction = Invoke-Restmethod -Method POST -Uri https://$WS1Host/api/mdm/tags/$WS1Tag/adddevices -body (ConvertTo-Json $body) -Headers $headers
+    $WS1TagAction = Invoke-Restmethod -Method POST -Uri https://$WS1Host/api/mdm/tags/$tagId/adddevices -body (ConvertTo-Json $body) -Headers $headers
 
      
     return $WS1TagAction
+}
+
+
+Function Get-WS1TaggedDevices {
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$WS1Host,
+        [Parameter(Mandatory=$true, Position=1)]
+        [string]$tagId,
+        [Parameter(Mandatory=$false, Position=2)]
+        [datetime]$lastSeen,
+        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
+        [Hashtable]$headers
+    )
+
+    if (!$lastSeen) {
+        $ws1TaggedDevices = Invoke-RestMethod -Method GET -Uri https://$ws1Host/api/mdm/tags/$tagId/devices -Headers $headers
+    }
+    else {
+        $ws1TaggedDevices = Invoke-RestMethod -Method GET -Uri https://$ws1Host/api/mdm/tags/$tagId/devices?lastseen=$lastSeen
+    }
+    return $ws1TaggedDevices
 }

@@ -209,7 +209,7 @@ Function Set-ws1Device {
         .PARAMETER awHost
             The URL to your API server. You can also use the Console URL
         .PARAMETER idType
-            Unique Identifier used to specify which devices to delete. Possible values include : MacAddress,UDID,SerialNumber
+            Unique Identifier used to specify which devices to edit. Possible values include : MacAddress,UDID,SerialNumber
         .PARAMETER assetNumber
             assetNumber
         .PARAMETER deviceFriendlyName
@@ -218,19 +218,15 @@ Function Set-ws1Device {
             Ownership type. Possible values includes : CorporateOwned, CorporateShared, or EmployeeOwned.
   #>
     param (
-        [Parameter(Mandatory=$true, Position=0)][string]$ws1Host,
-        [Parameter(Mandatory=$true, Position=1,ValueFromPipelineByPropertyName=$true)][ValidateSet("DeviceID","Macaddress","Udid","SerialNumber")][string]$idType,
-        [Parameter(Mandatory=$true, Position=2)][string]$deviceId,
-        [Parameter(Mandatory=$false, Position=3)][string]$assetNumber,
-        [Parameter(Mandatory=$false, Position=4)][string]$deviceFriendlyName,
-        [Parameter(Mandatory=$false, Position=5)][ValidateSet("CorporateOwned","CorporateShared","EmployeeOwned")][string]$ownership,
-        [Parameter(Mandatory=$false, Position=6)][bool]$bluetooth,
-        [Parameter(Mandatory=$false, Position=7)][bool]$voiceRoamingAllowed,
-        [Parameter(Mandatory=$false, Position=8)][bool]$dataRoamingAllowed,
-        [Parameter(Mandatory=$false, Position=9)][bool]$personalHotspotAllowed,
-        [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
+        [Parameter(Mandatory=$true, Position=0)][ValidateSet("DeviceID","Macaddress","Udid","SerialNumber")][string]$searchBy,
+        [Parameter(Mandatory=$true, Position=1)][string]$alternateId,
+        [Parameter(Mandatory=$false, Position=2)][string]$assetNumber,
+        [Parameter(Mandatory=$false, Position=3)][string]$deviceFriendlyName,
+        [Parameter(Mandatory=$false, Position=4)][ValidateSet("CorporateOwned","CorporateShared","EmployeeOwned")][string]$ownership,
+        [Parameter(Mandatory=$true, Position=5,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
     )
 
+    $ws1ApiUri = $headers.ws1ApiUri
 
     ### Creation of JSON payload
     $body = @{}
@@ -247,14 +243,13 @@ Function Set-ws1Device {
     
      
     ### Different REST API URI depending on Unique Identifier used to pinpoint device
-    if ($idType -eq "DeviceID") {
-        $ws1DeviceEdited = Invoke-Restmethod -Method PUT -Uri https://$ws1host/api/mdm/devices/$deviceId/editdevice -Body (ConvertTo-Json $body) -Headers $Headers
-        return $wsDeviceEdited
+    if ($searchBy -eq "DeviceID") {
+        $ws1DeviceEdit = Invoke-WebRequest -Method PUT -Uri https://$ws1ApiUri/api/mdm/devices/$alternateId -Body (ConvertTo-Json $body) -Headers $headers
     }
     else {
-        $ws1DeviceEdited = Invoke-Restmethod -Method PUT -Uri https://$ws1host/api/mdm/devices/$deviceId -Body (ConvertTo-Json $body) -Headers $Headers
-        return $ws1DeviceEdited
+        $ws1DeviceEdit = Invoke-Webrequest -method PUT -URI https://$ws1ApiUri/api/mdm/devices?searchby=$searchBy"&"id=$alternateId -body (ConvertTo-Json $Body) -headers $Headers
     }
+    return $ws1DeviceEdit
 }
 
 

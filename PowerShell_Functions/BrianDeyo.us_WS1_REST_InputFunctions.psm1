@@ -27,7 +27,7 @@ Function Import-WS1DeviceCsv {
     $inputCsv = Read-Host -Prompt "please input name of the csv (without .csv extension) that includes the serial numbers. Press enter to use default file name ($defaultFilename)"
     
         Try {
-            if ($inputCsv -eq "") {
+            if ($null -eq $inputCsv) {
                 $inputCsv = $defaultFilename
             }
             
