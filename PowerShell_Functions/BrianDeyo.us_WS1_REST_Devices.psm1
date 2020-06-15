@@ -108,7 +108,7 @@ param (
         }
         elseif ($searchBy -eq "DeviceID") {
             $WS1BulkDevices = Invoke-RestMethod -Method POST -uri https://$WS1Host/api/mdm/devices/id -body (ConvertTo-Json $body) -Headers $Headers
-            write-host $WS1BulkDevices.Devices | ft
+            write-host $WS1BulkDevices.Devices | format-table
         }
      return $WS1BulkDevices
 }

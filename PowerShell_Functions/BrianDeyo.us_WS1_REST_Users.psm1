@@ -202,3 +202,49 @@ return $ws1User
 }
 
 
+
+
+
+#####
+### ADMIN USERS
+#####
+
+
+
+function find-WS1AdminUserOLD {
+    $ws1EnvUri = $headers.ws1ApiUri
+    $deviceId = 1467
+    $searchBy = "username"
+    $username = "CDC"
+    $ws1AdminDetails = invoke-restmethod -Method GET -Uri https://$ws1EnvUri/api/system/admins/search?$searchby=$username -headers $headers
+    return $ws1AdminDetails
+}
+
+function find-ws1AdminUser {
+    param (
+        [Parameter(Mandatory=$false, Position=5)][string]$UserName,
+        [Parameter(Mandatory=$false, Position=0)][string]$FirstName,
+        [Parameter(Mandatory=$false, Position=1)][string]$LastName,
+        [Parameter(Mandatory=$false, Position=2)][string]$Email,
+        [Parameter(Mandatory=$false, Position=2)][string]$LocationGroup,
+        [Parameter(Mandatory=$false, Position=3)][int]$LocationGroupId,
+        [Parameter(Mandatory=$false, Position=2)][string]$OrganizationGroupUuid,
+        [Parameter(Mandatory=$false, Position=2)][string]$TimeZone,
+        [Parameter(Mandatory=$false, Position=2)][string]$TimeZoneIdentifier,
+        [Parameter(Mandatory=$false, Position=2)][string]$Locale,
+        [Parameter(Mandatory=$false, Position=5)][string]$InitialLandingPage,
+        [Parameter(Mandatory=$false, Position=5)][string]$LastLoginTimeStamp,
+        [Parameter(Mandatory=$false, Position=4)][string]$Roles,
+        
+        [Parameter(Mandatory=$false, Position=6)][int]$page,
+        [Parameter(Mandatory=$false, Position=7)][int]$pagesize,
+        [Parameter(Mandatory=$false, Position=8)][string]$orderBy,
+        [Parameter(Mandatory=$false, Position=9)][ValidateSet("ASC","DESC")][string]$sortOrder,
+        [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
+        )
+        $ws1EnvApi = $headers.'aw-tenant-code'
+        $ws1EnvUri = $headers.ws1ApiUri
+
+        $userSearch = Invoke-WebRequest -method GET -Uri https://$ws1EnvUri/api/system/users/search?username=$username -Headers $headers
+        return $userSearch
+}
