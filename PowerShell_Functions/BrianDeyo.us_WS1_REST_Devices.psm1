@@ -136,10 +136,10 @@ Function Search-ws1Devices {
         [Parameter(mandatory=$true, Position=13)][hashtable]$headers
     )
     
-    $ws1EnvUri = $headers.ws1ApiUri
+    
     
     $dev = $null
-    $dev = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/api/mdm/devices/search?lgid=$lgID"&"page=$page"&"pagesize=$pageSize -Headers $headers
+    $dev = Invoke-RestMethod -Method GET -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/search?lgid=$lgID"&"page=$page"&"pagesize=$pageSize -Headers $headers
     return $dev.Devices
 }
 

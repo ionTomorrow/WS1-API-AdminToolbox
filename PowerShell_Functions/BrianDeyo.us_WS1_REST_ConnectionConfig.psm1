@@ -410,3 +410,23 @@ foreach ($folder in $folders) {
     }
 }
 }
+
+
+function convertTo-HeaderVersion {
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [hashtable]$headers,
+        [Parameter(Mandatory=$true, Position=1)]
+        [ValidateSet(1,2)][int]$ws1APIVersion
+        )
+
+        $headers.Remove("Accept")
+        $headers.Remove("Version")
+    if ($ws1ApiVersion -eq 1) {
+        $headers.Add("Accept","application/json;version=1")
+    }
+    elseif ($ws1ApiVersion -eq 2) {
+        $headers.Add("Accept","application/json;version=2")
+    }
+    return $headers
+}

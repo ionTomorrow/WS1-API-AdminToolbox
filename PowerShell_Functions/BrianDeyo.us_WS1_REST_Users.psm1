@@ -128,10 +128,10 @@ function find-ws1User {
         [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)]
             [Hashtable]$headers
         )
-        $ws1EnvApi = $headers.'aw-tenant-code'
+        $headers = convertto-headerversion -headers $headers -ws1ApiVersion 1
         $ws1EnvUri = $headers.ws1ApiUri
 
-        $userSearch = Invoke-WebRequest -method GET -Uri https://$ws1EnvUri/api/system/users/search?username=$username -Headers $headers
+        $userSearch = Invoke-WebRequest -method GET -Uri https://$($headers.ws1ApiUri)/api/system/users/search?username=$username -Headers $headers
         return $userSearch
 }
 

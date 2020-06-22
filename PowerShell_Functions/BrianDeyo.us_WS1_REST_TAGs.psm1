@@ -75,19 +75,21 @@ Function Set-WS1DeviceTag {
         [Parameter(Mandatory=$true, Position=0)]
         [string]$WS1Host,
         [Parameter(Mandatory=$true, Position=1)]
-        [string]$tagId,
+        [int]$tagId,
         [Parameter(Mandatory=$true, Position=2)]
-        [array]$addDevices,
-        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
+        [string][ValidateSet("add","remove")]$tagAction,
+        [Parameter(Mandatory=$true, Position=3)]
+        [array]$Devices,
+        [Parameter(Mandatory=$true, Position=4,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
     )
 
     ###Convert Array of DeviceIDs into JSON     
     $body = @{
-                BulkValues = @{Value = @($addDevices)}
+                BulkValues = @{Value = @($Devices)}
             }
 
-    $WS1TagAction = Invoke-Restmethod -Method POST -Uri https://$WS1Host/api/mdm/tags/$tagId/adddevices -body (ConvertTo-Json $body) -Headers $headers
+    $WS1TagAction = Invoke-Restmethod -Method POST -Uri https://$WS1Host/api/mdm/tags/$tagId/$tagAction -body (ConvertTo-Json $body) -Headers $headers
 
      
     return $WS1TagAction

@@ -11,7 +11,8 @@ Importing a bad filename is going to result in an error and not return anything 
 Function Import-WS1DeviceCsv {
     param(
         [Parameter(Mandatory=$true,Position=0)][string]$defaultFilename,
-        [Parameter(Mandatory=$false,Position=1)][bool]$GetFileHash
+        [Parameter(Mandatory=$false,Position=1)][bool]$GetFileHash,
+        [Parameter(Mandatory=$false,Position=2)][string]$ColumnName
     )
 
     <#Retrieve CSV from input directory #>
@@ -60,4 +61,45 @@ function New-WS1Batch {
         [Parameter(Mandatory=$true, Position=1)]
         [hashtable]$batchInput
     )
+}
+
+
+function get-threadCount {
+    <#
+    .SYNOPSIS
+    Retrieve maximum number of threads based off logicalCPU count of the host machine.
+    
+    .DESCRIPTION
+    Retrieve maximum number of threads based off logicalCPU count of the host machine.
+    
+    .EXAMPLE
+    $example = get-threadCount
+    
+    .NOTES
+    Should detect whether underlying platform is macOS, Linux, or Windows and return appropriately.
+    #>
+
+    ###Check if Windows. This should probably be reversed since *most* people will run PowerShell Scripts on Windows
+    if ($PSVersionTable.Platform -eq "Windows") {
+        $psVer = ($PSVersionTable.PSVersion).Major
+        if ($psVer -gt 5) {
+            [int]$threads = ((Get-CimInstance -ClassName Win32_Processor).NumberOfLogicalProcessors -2)
+        }
+        else {
+            [int]$threads = ((Get-WmiObject -Class Win32_processor).NumberOfLogicalProcessors -2)
+        }
+    }
+    else {
+        $logicalCpuCount = sysctl hw.logicalcpu
+        $cpuLine = $null
+        $cpuLine = $logicalCpuCount.Split(": ")
+        [int]$cpuCount = $cpuLine[1]
+        [int]$threads = ($cpuCount -2)
+    }
+
+    ###Return a minimum of 1 for total threads
+    if ($threads -le 1) {
+        $threads = 1
+    }
+    return $threads
 }
