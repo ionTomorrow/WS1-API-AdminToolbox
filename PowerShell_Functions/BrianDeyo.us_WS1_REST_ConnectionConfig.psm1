@@ -412,7 +412,7 @@ foreach ($folder in $folders) {
 }
 
 
-function convertTo-HeaderVersion {
+function convertTo-ws1HeaderVersion {
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [hashtable]$headers,
