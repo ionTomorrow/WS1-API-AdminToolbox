@@ -71,16 +71,28 @@ Function Search-WS1Tags {
 }
 
 Function Set-WS1DeviceTag {
+    <#
+        .SYNOPSIS
+            Add or Remove devices from an existing Tag
+        .DESCRIPTION
+            Add or Remove devices from an existing Tag
+
+            #ChangeLog
+            2020-07-06  Brian Deyo      Change $tagAction to reflect correct URIs
+                                            Removed requirement to specify $WS1Host parameter when calling function
+        .EXAMPLE
+            Get-WS1BulkDeviceSettings -WS1Host xx123.awmdm.com -headers (HeaderHashTable)
+        .PARAMETER WS1Host
+            The URL to your API server. You can also use the Console URL 
+  #>
     param (
         [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
-        [Parameter(Mandatory=$true, Position=1)]
         [int]$tagId,
+        [Parameter(Mandatory=$true, Position=1)]
+        [string][ValidateSet("addDevices","removeDevices")]$tagAction,
         [Parameter(Mandatory=$true, Position=2)]
-        [string][ValidateSet("add","remove")]$tagAction,
-        [Parameter(Mandatory=$true, Position=3)]
         [array]$Devices,
-        [Parameter(Mandatory=$true, Position=4,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=3)]
         [Hashtable]$headers
     )
 
@@ -89,7 +101,7 @@ Function Set-WS1DeviceTag {
                 BulkValues = @{Value = @($Devices)}
             }
 
-    $WS1TagAction = Invoke-Restmethod -Method POST -Uri https://$WS1Host/api/mdm/tags/$tagId/$tagAction -body (ConvertTo-Json $body) -Headers $headers
+    $WS1TagAction = Invoke-Restmethod -Method POST -Uri https://$($headers.ws1ApiUri)/api/mdm/tags/$tagId/$tagAction -body (ConvertTo-Json $body) -Headers $headers
 
      
     return $WS1TagAction
