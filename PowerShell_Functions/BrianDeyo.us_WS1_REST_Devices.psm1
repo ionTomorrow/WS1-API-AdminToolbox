@@ -117,6 +117,9 @@ param (
 
 <#
 Retrieve *all* devices from an Environment
+
+###Change Log
+    2020-06-30 - Brian@BrianDeyo.us         changed $LGID to mandatory. Without the OGID large environments could be a problem since it defaults to customer OG.
 #>
 Function Search-ws1Devices {
     param(
@@ -125,7 +128,7 @@ Function Search-ws1Devices {
         [Parameter(mandatory=$false, Position=2)][string]$platform,
         [Parameter(mandatory=$false, Position=3)][dateTime]$lastSeen,
         [Parameter(mandatory=$false, Position=4)][string]$ownership,
-        [Parameter(mandatory=$false, Position=5)][string]$lgid,
+        [Parameter(mandatory=$true, Position=5)][int]$lgid,
         [Parameter(mandatory=$false, Position=6)][bool]$compliantStatus,
         [Parameter(mandatory=$false, Position=7)][dateTime]$seenSince,
         [Parameter(mandatory=$false, Position=8)][int]$page,
@@ -238,7 +241,12 @@ Function Set-ws1Device {
         $body.Add("DeviceFriendlyName", $deviceFriendlyName)
     }
     if ($ownership -ne $null) {
-        $body.Add("Ownership", $ownership)
+        switch ($ownership) {
+            "CorporateOwned" {$ownershipCode = "C"}
+            "CorporateShared" {$ownershipCode = "S"}
+            "EmployeeOwned" {$ownershipCode = "E"}
+        }
+        $body.Add("Ownership", $ownershipCode)
     }
     
      
@@ -462,4 +470,49 @@ Function move-ws1Device {
         return;
     }
     return;
+}
+
+
+Function get-ws1DeviceCount {
+    <#.SYNOPSIS
+    Retrieves Device Count Information which are Categorised by Device Info like Platform, EnrollmentStatus, Ownership etc.
+    .DESCRIPTION
+    Retrieves the device count for the following information.
+    * Total number of devices deployed in an OG.
+    * Device count breakdown by Security Info.
+    * Device count breakdown by Ownership Info.
+    * Device count breakdown by Platform Info.
+    * Device count breakdown by EnrollmentStatus Info.
+    
+    .EXAMPLE
+    get-ws1DeviceCount -ogId 570 -headers $headers
+    .PARAMETER WS1Host
+    .PARAMETER SearchBy
+    .PARAMETER deviceId
+    .PARAMETER ogId
+    .PARAMETER headers
+    #>
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [Int]$ogId,
+        [Parameter(Mandatory=$true, Position=4,ValueFromPipelineByPropertyName=$true)]
+        [Hashtable]$headers
+    )
+
+    try {
+        $ws1deviceCount = invoke-webrequest -method GET -URI https://$($headers.ws1ApiUri)//API/mdm/devices/devicecountinfo?organizationgroupid=$ogid -headers $headers
+        $primaryReturn = (convertFrom-Json $ws1deviceCount.content)
+        $apiStatusCode = (convertFrom-Json $ws1deviceCount.StatusCode)
+    }
+    catch [Exception] {
+        
+        $errorEvent = $error[0].ErrorDetails
+        $errorEvent = (convertFrom-Json $errorEvent.message)
+        $apiStatusCode = $errorEvent.errorCode
+        $primaryReturn = $errorEvent.message
+
+        #$LogEvent = New-Object psobject -Property @{UDID=$record.Udid;errorCode=$errorEvent.Status;errorMessage=$errorEvent.message;activityId=$errorEvent.HResult}
+        
+    }
+    return $apiStatusCode, $primaryReturn    
 }
