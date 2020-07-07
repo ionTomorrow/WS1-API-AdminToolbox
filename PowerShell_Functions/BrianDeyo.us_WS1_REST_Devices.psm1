@@ -516,3 +516,27 @@ Function get-ws1DeviceCount {
     }
     return $apiStatusCode, $primaryReturn    
 }
+
+Function update-ws1DeviceOutput {
+    <#.SYNOPSIS
+    Appends columns/attributes to device output in case of mixed device environments.
+    .DESCRIPTION
+    Not all devices have the same attributes populated when pulling data from API. This function will append missing columns to the device that is fed to it.
+    
+    .EXAMPLE
+    update-ws1DeviceOutput $device
+    .PARAMETER device
+    #>
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [array]$device
+    )
+    
+    if (!$device.DeviceCapacity) {$device | add-member -Name "DeviceCapacity" -MemberType NoteProperty -Value "NoSampleListed"}
+    if ($device.AvailableDeviceCapacity -eq $null) {$device | add-member -Name "AvailableDeviceCapacity" -MemberType NoteProperty -Value "NoSampleListed"}
+    if ($device.DataProtectionStatus -eq $null) {$device | add-member -Name "DataProtectionStatus" -MemberType NoteProperty -Value "NoSampleListed"}
+    if (!$device.DeviceCellularNetworkInfo) {$device | add-member -Name "DeviceCellularNetworkInfo" -MemberType NoteProperty -Value "NoSampleListed"}
+    if ($device.LastBluetoothSampleTime -eq $null) {$device | add-member -Name "LastBluetoothSampleTime" -MemberType NoteProperty -Value "NoSampleListed"}
+    if ($device.ComplianceSummary -eq $null) {$device | add-member -Name "ComplianceSummary" -MemberType NoteProperty -Value "NoSampleListed"}
+    return $device
+}
