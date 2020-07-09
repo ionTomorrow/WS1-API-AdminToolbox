@@ -61,6 +61,22 @@ Function Import-WS1DeviceCsv {
 }
 
 Function Import-WS1Csv {
+    <#.SYNOPSIS
+    Imports a .csv and obtains specific characteristics of the .csv useable for WS1 scripts and functions
+    .DESCRIPTION
+    Imports a .csv and identifies the column of the .csv that includes the unique identifier for each row. Optionally a filehash can be produced for comparison against an existed .csv.
+
+    CHANGELOG
+    2020-07-09 - modified header retrieval to strip off quote marks ".
+    
+    .EXAMPLE
+    import-ws1Csv -defaultFileName "Device Inventory" -getFileHash $true -uniqueHeader "Serial Number"
+    .PARAMETER defaultFileName
+    .PARAMETER getFileHash
+    .PARAMETER uniqueHeader
+    
+
+    #>
     param(
         [Parameter(Mandatory=$true,Position=0)][string]$defaultFilename,
         [Parameter(Mandatory=$false,Position=1)][bool]$GetFileHash,
@@ -121,6 +137,7 @@ Function Import-WS1Csv {
                     }
                     [int]$uniqueColumn = Read-Host -Prompt "Type Number of the Unique Identifier for the input file or push enter to repreat the list of imported headers."
                     [string]$uniqueHeader = $headerRow[$uniqueColumn]
+                    $uniqueHeader = $uniqueHeader -replace '["]',''
                 }
                 
                 if ($headerRow -contains $uniqueHeader){
