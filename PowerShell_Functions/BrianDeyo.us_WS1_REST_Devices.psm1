@@ -540,3 +540,21 @@ Function update-ws1DeviceOutput {
     if ($device.ComplianceSummary -eq $null) {$device | add-member -Name "ComplianceSummary" -MemberType NoteProperty -Value "NoSampleListed"}
     return $device
 }
+
+
+
+
+function set-ws1DeviceNote {
+    <#.SYNOPSIS
+    Add a note to a device
+    .DESCRIPTION
+    Notes survive device wipes. This can be helpful for logging information to individual devices.
+    
+    .EXAMPLE
+    set-ws1DeviceNote $deviceId
+    .PARAMETER deviceId
+    #>
+    param (
+     [Parameter(Mandatory=$true,Position=0)][int]$deviceId
+    )
+}

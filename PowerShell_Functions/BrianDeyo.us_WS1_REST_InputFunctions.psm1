@@ -118,8 +118,10 @@ Function Import-WS1Csv {
             $hashCsv = ($verifyCsv | Get-FileHash -Algorithm SHA256).hash
             [System.Collections.ArrayList]$headerRow = @()
 
-            ###obtain header row for .csv
+            ###obtain header row for .csv and remove extra Quotes that are put in during import.
             [System.Collections.ArrayList]$headerRow = (Get-Content $verifyCsv | Select-Object -First 1).Split(",")
+            $headerRow = $headerRow | ForEach-Object {$_.trim('"')}
+            
             
             ###Validate that the Unique Identifier presented in the function call or found in the input is valid
             Do {
@@ -137,7 +139,7 @@ Function Import-WS1Csv {
                     }
                     [int]$uniqueColumn = Read-Host -Prompt "Type Number of the Unique Identifier for the input file or push enter to repreat the list of imported headers."
                     [string]$uniqueHeader = $headerRow[$uniqueColumn]
-                    $uniqueHeader = $uniqueHeader -replace '["]',''
+                    
                 }
                 
                 if ($headerRow -contains $uniqueHeader){
@@ -168,6 +170,7 @@ Function Import-WS1Csv {
 
     ###return imported CSV as an object, uniqueHeader and the filehash if requested by script.
     ###Multiple values can be retrieved by accessing results like an array - https://social.technet.microsoft.com/Forums/ie/en-US/65d3bf7f-c710-498a-b535-46c64cbf92e7/return-multiple-values-in-powershell?forum=ITCG
+    $uniqueHeader = $uniqueHeader -replace '["]',''
     Return $inputList, $hashCsv, $uniqueHeader
 
 }
