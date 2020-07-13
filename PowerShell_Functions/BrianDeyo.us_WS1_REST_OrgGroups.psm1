@@ -17,6 +17,20 @@ Function Find-CustomerOGID {
     return $WS1CustomerOG.LocationGroups.Id.value
 }
 
+
+Function Find-CustomerOGID {
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$WS1Host,
+        [Parameter(Mandatory=$true, Position=2,ValueFromPipelineByPropertyName=$true)]
+        [Hashtable]$headers
+        )
+    $WS1CustomerOG = Invoke-RestMethod -Method GET -Uri https://$WS1Host/api/system/groups/search?type=customer -Headers $headers
+
+    return $WS1CustomerOG.LocationGroups.Id.value
+}
+
+
 Function clear-AwOrgGroup {
     param (
         [Parameter(Mandatory=$true, Position=0)]
@@ -149,7 +163,7 @@ Function Find-WS1OrgGroup {
         [Parameter(Mandatory=$false, Position=1)]
         [string]$ws1OgType,
         [Parameter(Mandatory=$false, Position=2)]
-        [string]$ws1OgId,
+        [int]$ws1OgId,
         [Parameter(Mandatory=$false, Position=3)]
         [ValidateSet("Id","Name","GroupId","LocationGroupType")]
         [string]$orderBy,
@@ -167,7 +181,11 @@ Function Find-WS1OrgGroup {
        
     $searchString = $ws1OgId
     
-    $ws1EnvUri = $headers.ws1ApiUri
-    $ws1OgResults = Invoke-RestMethod -Method GET -Uri https://$ws1EnvUri/Api/System/groups/search?$searchString -Headers $Headers
+    try {
+        $ws1OgResults = Invoke-RestMethod -Method GET -Uri https://$($headers.ws1ApiUri)/Api/System/groups/search?$searchString -Headers $Headers
+    }
+    catch {
+        write-host "Search error... finish this script buddy"
+    }
     return $ws1OgResults
 }
