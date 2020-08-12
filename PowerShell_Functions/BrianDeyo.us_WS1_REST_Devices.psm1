@@ -90,13 +90,11 @@ Function Get-WS1BulkDevice {
   #>
 param (
         [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
-        [Parameter(Mandatory=$true, Position=1)]
         [ValidateSet("DeviceID","Macaddress","Udid","SerialNumber","ImeiNumber")]
         [string]$searchBy,
-        [Parameter(Mandatory=$true, Position=2)]
+        [Parameter(Mandatory=$true, Position=1)]
         [array]$bulkIdList,
-        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=2,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
      )
 
@@ -104,10 +102,10 @@ param (
                 BulkValues = @{Value = @($bulkIdList)}
             }
      if ($searchBy -ne "DeviceID") {
-         $WS1BulkDevices = Invoke-RestMethod -Method POST -uri https://$WS1Host/api/mdm/devices?searchby=$searchBy -body (ConvertTo-Json $body) -Headers $Headers
+         $WS1BulkDevices = Invoke-RestMethod -Method POST -uri https://$($headers.ws1ApiUri)/api/mdm/devices?searchby=$searchBy -body (ConvertTo-Json $body) -Headers $Headers
         }
         elseif ($searchBy -eq "DeviceID") {
-            $WS1BulkDevices = Invoke-RestMethod -Method POST -uri https://$WS1Host/api/mdm/devices/id -body (ConvertTo-Json $body) -Headers $Headers
+            $WS1BulkDevices = Invoke-RestMethod -Method POST -uri https://$($headers.ws1ApiUri)/api/mdm/devices/id -body (ConvertTo-Json $body) -Headers $Headers
             write-host $WS1BulkDevices.Devices | format-table
         }
      return $WS1BulkDevices
@@ -182,7 +180,7 @@ Function Remove-WS1Device {
         [Parameter(Mandatory=$true, Position=0)]
         [string]$WS1Host,
         [Parameter(Mandatory=$true, Position=1)]
-        [ValidateSet("Macaddress","Udid","SerialNumber","ImeiNumber")]
+        [ValidateSet("Macaddress","Udid","SerialNumber","ImeiNumber","EasId","DeviceId")]
         [string]$searchBy,
         [Parameter(Mandatory=$true, Position=2)]
         [string]$alternateId,

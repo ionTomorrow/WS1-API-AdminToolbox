@@ -115,12 +115,25 @@ Function Import-WS1Csv {
 
             $verifyCsv = get-item -path ($inputpath+$inputCsv)
 
-            $hashCsv = ($verifyCsv | Get-FileHash -Algorithm SHA256).hash
+            ###Retreieve hash
+            if ($GetFileHash) {
+                $hashCsv = ($verifyCsv | Get-FileHash -Algorithm SHA256).hash
+            }
+            else {
+                [string]$hashCsv = "fileHashNotGenerated"
+            }
             [System.Collections.ArrayList]$headerRow = @()
 
             ###obtain header row for .csv and remove extra Quotes that are put in during import.
             [System.Collections.ArrayList]$headerRow = (Get-Content $verifyCsv | Select-Object -First 1).Split(",")
-            $headerRow = $headerRow | ForEach-Object {$_.trim('"')}
+            
+            ###Remove Double Quote marks from inputCsv if it comes with them.
+            if ($headerRow.count -gt 1) {
+                $headerRow = $headerRow | ForEach-Object {$_.trim('"')}
+            }
+            else {
+                $headerRow.trim('"')
+            }
             
             
             ###Validate that the Unique Identifier presented in the function call or found in the input is valid
