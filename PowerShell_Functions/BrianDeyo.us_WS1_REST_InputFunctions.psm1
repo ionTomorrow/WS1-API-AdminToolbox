@@ -132,6 +132,8 @@ Function Import-WS1Csv {
                 $headerRow = $headerRow | ForEach-Object {$_.trim('"')}
             }
             else {
+                ###Still not solved... this is still importing the single row as a string
+                ###but got lucky since header had no quotes
                 $headerRow.trim('"')
             }
             
@@ -184,7 +186,12 @@ Function Import-WS1Csv {
     ###return imported CSV as an object, uniqueHeader and the filehash if requested by script.
     ###Multiple values can be retrieved by accessing results like an array - https://social.technet.microsoft.com/Forums/ie/en-US/65d3bf7f-c710-498a-b535-46c64cbf92e7/return-multiple-values-in-powershell?forum=ITCG
     $uniqueHeader = $uniqueHeader -replace '["]',''
-    Return $inputList, $hashCsv, $uniqueHeader
+    $importCsvReturn = New-Object psobject @{importList=$inputList;hash=$hashCsv;uniqueHeader=$uniqueHeader}
+    #$importCsvReturn.add($inputList)
+    #$importCsvReturn.add($hashCsv)
+    #$importCsvReturn.Add($uniqueHeader)
+    #Return $inputList, $hashCsv, $uniqueHeader
+    Return $importCsvReturn
 
 }
 
