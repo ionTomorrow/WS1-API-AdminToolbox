@@ -49,12 +49,13 @@ Function New-ws1RestConnection {
         Do {
             $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
         
-            write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
+            
             $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
         
             #Test the Headres build
-            $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri"}
-        
+            $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri";'ws1ApiAdmin' = "$($credential.username)"}
+            write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
+
             ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
             $testWs1Connection = test-ws1RestConnection -headers $headers
             
