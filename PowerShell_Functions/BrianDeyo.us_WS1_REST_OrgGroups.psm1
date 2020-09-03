@@ -189,3 +189,36 @@ Function Find-WS1OrgGroup {
     }
     return $ws1OgResults
 }
+
+
+Function get-ws1OrgGroup {
+    <#
+       .SYNOPSIS
+       Find Org Group by ID
+       .DESCRIPTION
+       Required knowing OGID
+       .EXAMPLE
+       get-ws1OrgGroup -name -type -groupid  -headers
+       .PARAMETER awHost
+       The URL to your API server. You can also use the Console URL
+       .PARAMETER SearchBy
+       Unique Identifier used to specify which devices to delete. Possible values include DeviceID,MacAddress,UDID,SerialNumber,ImeiNumber
+     #>
+     param (
+           [Parameter(Mandatory=$true, Position=0)]
+           [int]$ws1OgId,
+           [Parameter(Mandatory=$true, Position=7,ValueFromPipelineByPropertyName=$true)]
+           [Hashtable]$headers
+           )
+   
+    try {
+        $ws1OgResults = Invoke-webRequest -Method GET -Uri https://$($headers.ws1ApiUri)/Api/System/groups/$ws1OgId -Headers $Headers
+        $ws1OgResults = ConvertFrom-Json $ws1OgResults
+    }
+    catch [Exception] {
+        if ($_.ErrorDetails) {
+            $ws1OgResults = ConvertFrom-Json($_.ErrorDetails)
+        }
+    }
+    return $ws1OgResults
+}

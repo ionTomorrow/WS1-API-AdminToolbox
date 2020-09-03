@@ -156,6 +156,9 @@ Function Import-WS1Csv {
                     [string]$uniqueHeader = $headerRow[$uniqueColumn]
                     
                 }
+                else {
+                    $uniqueHeader = $uniqueHeader -replace '["]',''
+                }
                 
                 if ($headerRow -contains $uniqueHeader){
                     [bool]$validHeader = $true
@@ -186,7 +189,7 @@ Function Import-WS1Csv {
     ###return imported CSV as an object, uniqueHeader and the filehash if requested by script.
     ###Multiple values can be retrieved by accessing results like an array - https://social.technet.microsoft.com/Forums/ie/en-US/65d3bf7f-c710-498a-b535-46c64cbf92e7/return-multiple-values-in-powershell?forum=ITCG
     $uniqueHeader = $uniqueHeader -replace '["]',''
-    $importCsvReturn = New-Object psobject @{importList=$inputList;hash=$hashCsv;uniqueHeader=$uniqueHeader}
+    $importCsvReturn = New-Object psobject @{importList=$inputList;hash=$hashCsv;uniqueHeader=$uniqueHeader;inputFileName=$($verifyCsv.basename)}
     #$importCsvReturn.add($inputList)
     #$importCsvReturn.add($hashCsv)
     #$importCsvReturn.Add($uniqueHeader)

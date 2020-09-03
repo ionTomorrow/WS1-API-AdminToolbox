@@ -128,7 +128,7 @@ function find-ws1User {
         [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)]
             [Hashtable]$headers
         )
-        $headers = convertto-headerversion -headers $headers -ws1ApiVersion 1
+        $headers = convertTo-ws1HeaderVersion -headers $headers -ws1ApiVersion 1
         $ws1EnvUri = $headers.ws1ApiUri
 
         $userSearch = Invoke-WebRequest -method GET -Uri https://$($headers.ws1ApiUri)/api/system/users/search?username=$username -Headers $headers
