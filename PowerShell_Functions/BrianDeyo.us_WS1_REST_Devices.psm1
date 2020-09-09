@@ -156,6 +156,20 @@ Function Search-ws1Devices {
 Pipeline Id not being parsed before input... need to return Device.Id.value
 #>
 Function Clear-ws1Device {
+    <#
+    .SYNOPSIS
+            Retrieve Device Details in Bulk
+        .DESCRIPTION
+            Retrieve Device Details for more than a single device. Useful to reduce total number of API queries. This is intended for use from a script and not necessarily useful from the command line itself.
+        .EXAMPLE
+            Get-WS1BulkDevice -WS1Host xx123.awmdm.com -searchBy SerialNumber -bulkIdList (ARRAY OBJECT) "Asset123" -ownership "CorporateShared" -headers (HeaderHashTable)
+        .PARAMETER awHost
+            The URL to your API server. You can also use the Console URL
+        .PARAMETER searchBy
+            Unique Identifier used to specify which devices to delete. Possible values include : MacAddress,UDID,SerialNumber, DeviceID, IMEI
+        .PARAMETER bulkIdList
+            An array containing all the IDs for the Unique Identifier type you are searchign by
+    #>
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string]$ws1Host,
@@ -171,6 +185,109 @@ Function Clear-ws1Device {
     $ws1WipeStatus = Get-WS1Device -WS1Host $ws1Host -SearchBy DeviceID -alternateId $Id -headers $headers
     return $ws1WipeStatus
 }
+
+
+
+Function Clear-ws1DeviceV2 {
+     <#
+    .SYNOPSIS
+            EnterpriseWipe or DeviceWipe a single device.
+        .DESCRIPTION
+            Uses the v2 API https://censusuat.awfed.com/api/help/#!/apis/10003?!/CommandsV2/CommandsV2_ExecuteByAlternateId
+        .EXAMPLE
+            clear-ws1DeviceV2 -WS1Host xx123.awmdm.com -searchBy SerialNumber ABC123 -DeviceWipe -DeviceWipeType WIPE -headers (HeaderHashTable)
+        .PARAMETER awHost
+            The URL to your API server. You can also use the Console URL
+        .PARAMETER searchBy
+            Unique Identifier used to specify which devices to delete. Possible values include : MacAddress,UDID,SerialNumber, DeviceID, IMEI
+        .PARAMETER bulkIdList
+            An array containing all the IDs for the Unique Identifier type you are searchign by
+    #>
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+            [string]$ws1Host,
+        [Parameter(Mandatory=$true, Position=1)]
+            [ValidateSet("Macaddress","Udid","SerialNumber","ImeiNumber","EasId")]
+            [string]$SearchBy,
+        [Parameter(Mandatory=$true, Position=2)]
+            [string]$Id,
+        [Parameter(ParameterSetName='enterpriseWipe',Mandatory=$false, Position=3)]    
+            [switch]$enterpriseWipe,
+        [Parameter(ParameterSetName='deviceWipe',Mandatory=$false, Position=3)]
+            [switch]$deviceWipe,
+        [Parameter(ParameterSetName='deviceWipe',Mandatory=$false, Position=4)]
+            [switch]$disableActivationKey,
+        [Parameter(ParameterSetName='deviceWipe',Mandatory=$false, Position=5)]
+            [switch]$disableProximitySetup,
+        [Parameter(ParameterSetName='deviceWipe',Mandatory=$false, Position=6)]
+            [switch]$preserveDataPlan,
+        [Parameter(ParameterSetName='deviceWipe',Mandatory=$true, Position=7)]
+            [ValidateSet("WIPE", "WIPE_PERSIST_PROVISIONED_DATA", "WIPE_PROTECTED", "WIPE_PERSIST_USER_DATA")]
+            [string]$deviceWipeType,
+        [Parameter(Mandatory=$false, Position=8)]
+            [switch]$workPasscode,
+        [Parameter(Mandatory=$false, Position=9)]
+            [string]$esim_url,
+        [Parameter(Mandatory=$true, Position=10)]
+            [hashtable]$headers
+    )
+
+    ###Convert Headers to use v2 API
+    $headers = convertTo-ws1HeaderVersion $headers -ws1APIVersion 2
+
+    if ($deviceWipe) {
+    <#{
+        "deviceWipe": {
+          "disableActivationKey": true,
+          "disallowProximitySetup": true,
+          "preserveDataPlan": true,
+          "wipeType": "WIPE"
+        },
+        "workPasscode": true,
+        "esim_url": "https://esim.vmware.com"
+      }#>
+        $commandsModel = @{}
+        $deviceWipeModel = @{}
+        if ($disableActivationKey) {$deviceWipeModel.add("disableActivationKey","true")}
+        if ($disableProximitySetup) {$deviceWipeModel.add("disallowProximitySetup","true")}
+        if ($preserveDataPlan) {$deviceWipeModel.add("preserveDataPlan","true")}
+        
+        $deviceWipeModel.add("wipeType",$deviceWipeType)
+        $commandsModel.add("deviceWipe",$deviceWipeModel)
+
+        
+        $ws1Wipe = Invoke-Webrequest -method POST -URI https://$ws1host/api/mdm/devices/commands/DeviceWipe/device/$searchBy/$Id -body (convertTo-Json $commandsModel) -headers $headers
+        write-host $ws1Wipe
+
+    }
+
+    $ws1WipeStatus = Get-WS1Device -WS1Host $ws1Host -SearchBy $searchBy -alternateId $Id -headers $headers
+    return $ws1WipeStatus
+}
+ 
+
+
+function test-parameterSet {
+    [CmdletBinding(DefaultParametersetName='None')] 
+param( 
+    [Parameter(Position=0,Mandatory=$true)] [string]$Age, 
+    [Parameter(Position=1,Mandatory=$true)] [string]$Sex, 
+    [Parameter(Position=2,Mandatory=$true)] [string]$Location,
+    [Parameter(ParameterSetName='Extra',Mandatory=$false)][switch]$Favorite,      
+    [Parameter(ParameterSetName='Extra',Mandatory=$true)][string]$FavoriteCar
+)
+
+$ParamSetName = $PsCmdLet.ParameterSetName
+    
+Write-Output "Age: $age"
+Write-Output "Sex: $sex"
+Write-Output "Location: $Location"
+Write-Output "Favorite: $Favorite"
+Write-Output "Favorite Car: $FavoriteCar"
+Write-Output "ParamSetName: $ParamSetName"
+}
+
+
     
 <# Permanently Delete a Device
 #>
