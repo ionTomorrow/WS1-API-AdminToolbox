@@ -224,7 +224,7 @@ function get-threadCount {
     #>
 
     ###Check if Windows. This should probably be reversed since *most* people will run PowerShell Scripts on Windows
-    if ($PSVersionTable.PSEdition -eq "Desktop") {
+    if ($PSVersionTable.Platform -eq "Win32NT") {
         $psVer = ($PSVersionTable.PSVersion).Major
         if ($psVer -gt 5) {
             [int]$threads = ((Get-CimInstance -ClassName Win32_Processor).NumberOfLogicalProcessors -2)
