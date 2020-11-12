@@ -189,3 +189,71 @@ Function Set-ws1AdminUser {
 
     return $ws1AdminUpdate
 }
+
+function remove-ws1AdminUser {
+    <#
+        .SYNOPSIS
+            Delete an Admin account
+        .DESCRIPTION
+            Deletes and Admin account using the V2 API
+            https://censusuat.awfed.com/api/help/#!/apis/10007?!/AdminsV2/AdminsV2_Delete
+        .EXAMPLE
+            Remove-ws1AdminUser -userUuid test1234 -headers $headers
+        .PARAMETER userUuid
+        .PARAMETER headers
+
+  #>
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+            $userUuid,
+        [Parameter(Mandatory=$true, Position=1)]
+            [Hashtable]$headers
+    )
+    
+    $headers = convertTo-ws1HeaderVersion -ws1APIVersion 2 -headers $headers
+    $ws1EnvUri = $headers.ws1ApiUri
+    Try{
+        $ws1AdminUser = invoke-webrequest -Method DELETE -Uri https://$ws1EnvUri/api/system/admins/$userUuid -Headers $headers
+        
+    }
+    catch [Exception]{
+        $ws1AdminUser = $_.exception
+    }
+    return $ws1AdminUser
+
+}
+
+
+
+
+function get-ws1AdminUser {
+    <#
+        .SYNOPSIS
+            Delete an Admin account
+        .DESCRIPTION
+            Deletes and Admin account using the V2 API
+            https://censusuat.awfed.com/api/help/#!/apis/10007?!/AdminsV2/AdminsV2_Get
+        .EXAMPLE
+            get-ws1AdminUser -userUuid test1234 -headers $headers
+        .PARAMETER userUuid
+        .PARAMETER headers
+
+  #>
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+            $userUuid,
+        [Parameter(Mandatory=$true, Position=1)]
+            [Hashtable]$headers
+    )
+    
+    $headers = convertTo-ws1HeaderVersion -ws1APIVersion 2 -headers $headers
+    $ws1EnvUri = $headers.ws1ApiUri
+    Try{
+        $ws1AdminUser = invoke-webrequest -Method GET -Uri https://$ws1EnvUri/api/system/admins/$userUuid -Headers $headers
+        
+    }
+    catch [Exception]{
+        $ws1AdminUser = $_.exception
+    }
+    return $ws1AdminUser
+}

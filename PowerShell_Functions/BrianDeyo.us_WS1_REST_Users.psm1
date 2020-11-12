@@ -202,4 +202,62 @@ return $ws1User
 }
 
 
+Function update-ws1UserOutput {
+    <#.SYNOPSIS
+    Appends columns/attributes to user output.
+    .DESCRIPTION
+    Helps build out an array that has User Properties even is user isn't actually found
+    
+    .EXAMPLE
+    update-ws1UserOutput $device
+    .PARAMETER user
+    .PARAMETER userType
+
+    #>
+    param (
+        [Parameter(Mandatory=$true, Position=0)][array]$user,
+        [Parameter(Mandatory=$true, Position=0)][ValidateSet("users","admins")][array]$userType
+    )
+    if (!$user.FirstName) {$user | add-member -Name "FirstName" -MemberType NoteProperty -Value "NoSameRetrieved"}
+    if (!$user.LastName) {$user | add-member -Name "LastName" -MemberType NoteProperty -Value "NoSameRetrieved"}   
+    if (!$user.Email) {$user | add-member -Name "Email" -MemberType NoteProperty -Value "NoSameRetrieved"}
+    if (!$user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSameRetrieved"}
+    if (!$user.OrganizationGroupUuid) {$user | add-member -Name "OrganizationGroupUuid" -MemberType NoteProperty -Value "NoSameRetrieved"}
+    if (!$user.Id) {$user | add-member -Name "Id" -MemberType NoteProperty -Value "NoSameRetrieved"}
+    if (!$user.Uuid) {$user | add-member -Name "Uuid" -MemberType NoteProperty -Value "NoSameRetrieved"}
+
+    switch ($userType) {
+        "admins" {
+            if (!$user.LocationGroup) {$user | add-member -Name "LocationGroup" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.TimeZone) {$user | add-member -Name "TimeZone" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.Locale) {$user | add-member -Name "Locale" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.InitialLandingPage) {$user | add-member -Name "InitialLandingPage" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.LastLoginTimeStamp) {$user | add-member -Name "LastLoginTimeStamp" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.Roles) {$user | add-member -Name "Roles" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.IsActiveDirectoryUser) {$user | add-member -Name "IsActiveDirectoryUser" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.RequiresPasswordChange) {$user | add-member -Name "RequiresPasswordChange" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.MessageTemplateId) {$user | add-member -Name "MessageTemplateId" -MemberType NoteProperty -Value "NoSameRetrieved"}
+        }
+        "users" {
+            if (!$user.Status) {$user | add-member -Name "Status" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.SecurityType) {$user | add-member -Name "SecurityType" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.ContactNumber) {$user | add-member -Name "ContactNumber" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.MobileNumber) {$user | add-member -Name "MobileNumber" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.MessageType) {$user | add-member -Name "MessageType" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.EmailUserName) {$user | add-member -Name "EmailUserName" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.Group) {$user | add-member -Name "Group" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.Role) {$user | add-member -Name "Role" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.EnrolledDevicesCount) {$user | add-member -Name "EnrolledDevicesCount" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.CustomAttribute1) {$user | add-member -Name "CustomAttribute1" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.ExternalId) {$user | add-member -Name "ExternalId" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.StagingMode) {$user | add-member -Name "StagingMode" -MemberType NoteProperty -Value "NoSameRetrieved"}
+            if (!$user.DeviceStagingEnabled) {$user | add-member -Name "DeviceStagingEnabled" -MemberType NoteProperty -Value "NoSameRetrieved"}
+        }
+    }
+
+    return $user
+}
+
+
 
