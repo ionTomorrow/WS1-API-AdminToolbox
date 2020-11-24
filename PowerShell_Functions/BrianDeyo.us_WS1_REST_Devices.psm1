@@ -653,6 +653,13 @@ Function update-ws1DeviceOutput {
     if (!$device.DeviceCellularNetworkInfo) {$device | add-member -Name "DeviceCellularNetworkInfo" -MemberType NoteProperty -Value "NoSampleListed"}
     if ($device.LastBluetoothSampleTime -eq $null) {$device | add-member -Name "LastBluetoothSampleTime" -MemberType NoteProperty -Value "NoSampleListed"}
     if ($device.ComplianceSummary -eq $null) {$device | add-member -Name "ComplianceSummary" -MemberType NoteProperty -Value "NoSampleListed"}
+    if (!$device.IsRemoteManagementEnabled) {$device | add-member -Name "IsRemoteManagementEnabled" -MemberType NoteProperty -Value "NoSampleListed"}
+    if (!$device.LastSystemSampleTime) {$device | add-member -Name "LastSystemSampleTime" -MemberType NoteProperty -Value "NoSampleListed"}    
+    if (!$device.OSBuildVersion) {$device | add-member -Name "OSBuildVersion" -MemberType NoteProperty -Value "NoSampleListed"}    
+    if ($device.HostName -eq $null) {$device | add-member -Name "HostName" -MemberType NoteProperty -Value "NoSampleListed"}    
+    if (!$device.LocalHostName) {$device | add-member -Name "LocalHostName" -MemberType NoteProperty -Value "NoSampleListed"}    
+    if (!$device.DeviceNetworkInfo) {$device | add-member -Name "DeviceNetworkInfo" -MemberType NoteProperty -Value "NoSampleListed"}    
+    if (!$device.LastNetworkLANSampleTime) {$device | add-member -Name "LastNetworkLANSampleTime" -MemberType NoteProperty -Value "NoSampleListed"}
     return $device
 }
 
