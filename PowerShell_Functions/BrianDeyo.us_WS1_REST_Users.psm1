@@ -220,7 +220,7 @@ Function update-ws1UserOutput {
     )
     if (!$user.FirstName) {$user | add-member -Name "FirstName" -MemberType NoteProperty -Value "NoSampleRetrieved"}
     if (!$user.LastName) {$user | add-member -Name "LastName" -MemberType NoteProperty -Value "NoSampleRetrieved"}   
-    if (!$user.Email) {$user | add-member -Name "Email" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($user.Email -eq $null) {$user | add-member -Name "Email" -MemberType NoteProperty -Value "NoSampleRetrieved"}
     if (!$user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
     if (!$user.OrganizationGroupUuid) {$user | add-member -Name "OrganizationGroupUuid" -MemberType NoteProperty -Value "NoSampleRetrieved"}
     if (!$user.Id) {$user | add-member -Name "Id" -MemberType NoteProperty -Value "NoSampleRetrieved"}
@@ -241,18 +241,22 @@ Function update-ws1UserOutput {
         "users" {
             if (!$user.Status) {$user | add-member -Name "Status" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if (!$user.SecurityType) {$user | add-member -Name "SecurityType" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.ContactNumber) {$user | add-member -Name "ContactNumber" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.MobileNumber) {$user | add-member -Name "MobileNumber" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.MessageType) {$user | add-member -Name "MessageType" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.EmailUserName) {$user | add-member -Name "EmailUserName" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.ContactNumber) {$user | add-member -Name "ContactNumber" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.MobileNumber) {$user | add-member -Name "MobileNumber" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.MessageType) {$user | add-member -Name "MessageType" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.EmailUserName) {$user | add-member -Name "EmailUserName" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if (!$user.Group) {$user | add-member -Name "Group" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if (!$user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if (!$user.Role) {$user | add-member -Name "Role" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.EnrolledDevicesCount) {$user | add-member -Name "EnrolledDevicesCount" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.CustomAttribute1) {$user | add-member -Name "CustomAttribute1" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.ExternalId) {$user | add-member -Name "ExternalId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.StagingMode) {$user | add-member -Name "StagingMode" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.DeviceStagingEnabled) {$user | add-member -Name "DeviceStagingEnabled" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.EnrolledDevicesCount) {$user | add-member -Name "EnrolledDevicesCount" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.CustomAttribute1) {$user | add-member -Name "CustomAttribute1" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.CustomAttribute2) {$user | add-member -Name "CustomAttribute2" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.CustomAttribute3) {$user | add-member -Name "CustomAttribute3" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.CustomAttribute4) {$user | add-member -Name "CustomAttribute4" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.CustomAttribute5) {$user | add-member -Name "CustomAttribute5" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.ExternalId) {$user | add-member -Name "ExternalId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.StagingMode) {$user | add-member -Name "StagingMode" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.DeviceStagingEnabled) {$user | add-member -Name "DeviceStagingEnabled" -MemberType NoteProperty -Value "NoSampleRetrieved"}
         }
     }
 
@@ -261,3 +265,52 @@ Function update-ws1UserOutput {
 
 
 
+function remove-ws1User {
+    param (
+        [Parameter(ParameterSetName='v2',Mandatory=$false, Position=0)]
+            [switch]$v2,
+        [Parameter(ParameterSetName='v2',Mandatory=$true, Position=0)]
+            [string]$useruuid,    
+        [Parameter(Mandatory=$false, Position=0)]
+            [int]$userId,
+        [Parameter(Mandatory=$true, Position=1)]
+            [Hashtable]$headers
+    )
+
+
+    ###Convert Headers to use v2 API
+
+
+    if ($v2) {
+        [int]$apiVersion = 2
+    }
+    else {
+        [int]$apiVersion = 1
+    }
+
+    switch ($apiVersion) {
+        1 {
+            try {
+                $ws1user = invoke-webrequest -Method DELETE -Uri https://$($headers.ws1ApiUri)/api/system/users/$($userId)/delete -Headers $headers
+            }
+            catch [exception] {            
+            }
+        }
+        2 {
+            $headers = convertTo-ws1HeaderVersion $headers -ws1APIVersion 2
+
+            try {
+                $ws1user = Invoke-WebRequest -Method DELETE -Uri https://$($headers.ws1ApiUri)/api/system/users/$($useruuid) -Headers $headers                
+            }
+            catch [exception] {
+
+            }
+        }
+    }
+    
+    
+
+    
+    return $ws1user
+
+}
