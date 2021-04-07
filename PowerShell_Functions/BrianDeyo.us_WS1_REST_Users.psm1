@@ -266,6 +266,17 @@ Function update-ws1UserOutput {
 
 
 function remove-ws1User {
+    <#.SYNOPSIS
+    Deletes a User account
+    .DESCRIPTION
+    Deletes a user account using either the v1 or v2 API
+    
+    .EXAMPLE
+    remove-ws1User -userid <userId> -headers <headers>
+    remote-ws1User -v2 -userUuid <userUuid. -headers <headers>
+    .PARAMETER userId
+    .PARAMETER headers
+    #>
     param (
         [Parameter(ParameterSetName='v2',Mandatory=$false, Position=0)]
             [switch]$v2,
@@ -308,8 +319,37 @@ function remove-ws1User {
         }
     }
     
-    
+    return $ws1user
 
+}
+
+
+function deactivate-ws1User {
+    <#.SYNOPSIS
+    Deactivates a User account
+    .DESCRIPTION
+    Deactivates a user account
+    
+    .EXAMPLE
+    deactivate-ws1User -userid <userId> -headers <headers>
+    .PARAMETER userId
+    .PARAMETER headers
+    #>
+    param (
+        [Parameter(Mandatory=$false, Position=0)]
+            [int]$userId,
+        [Parameter(Mandatory=$true, Position=1)]
+            [Hashtable]$headers
+    )
+
+
+    try {
+        $ws1user = Invoke-WebRequest -Method POST -uri https://$($headers.ws1ApiUri)/api/system/users/$($userId)/deactivate -Headers $headers
+    }
+    catch [exception] {
+        $ws1user = $error[0]
+
+    }
     
     return $ws1user
 
