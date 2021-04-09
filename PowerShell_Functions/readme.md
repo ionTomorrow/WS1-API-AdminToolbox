@@ -34,10 +34,10 @@ Functions in each script can have their help contents retrieved like other
 * remove-ws1AdminUser
 * get-ws1AdminUser
 
-##Apps
+## Apps
 * get-ws1AppDetails
 
-##ConnectionConfig
+## ConnectionConfig
 * new-ws1RestConnection
 * select-ws1Config
 * get-ws1SettingsFile
@@ -47,10 +47,10 @@ Functions in each script can have their help contents retrieved like other
 * convertTo-ws1HeaderVersion
 * trace-ws1Error
 
-##CustomAttributes
+## CustomAttributes
 * get-ws1DeviceCustomAttribute
 
-##Devices
+## Devices
 * get-ws1BulkDeviceSettings
 * find-ws1Device
 * get-ws1Device
@@ -67,7 +67,7 @@ Functions in each script can have their help contents retrieved like other
 * get-ws1DeviceCount
 * update-ws1DeviceOutput
 
-##InputFunctions
+## InputFunctions
 * import-ws1DeviceCsv
 * import-ws1Csv (deprecated)
 * get-threadCount
@@ -76,7 +76,7 @@ Functions in each script can have their help contents retrieved like other
 * new-ws1InputArchive
 * get-ws1Folders
 
-##OrgGroups
+## OrgGroups
 * find-CustomerOGID
 * get-awOgTree
 * clear-awOrgTree
@@ -84,16 +84,16 @@ Functions in each script can have their help contents retrieved like other
 * find-ws1OrgGroup
 * get-ws1OrgGroup
 
-##SmartGroups
+## SmartGroups
 * get-ws1SmartGroup
 * find-ws1SmartGroup
 
-##TAGs
+## TAGs
 * search-ws1Tags
 * set-ws1DeviceTag
 * get-ws1TaggedDevices
 
-##Users
+## Users
 * new-ws1User
 * find-ws1User
 * get-ws1User
