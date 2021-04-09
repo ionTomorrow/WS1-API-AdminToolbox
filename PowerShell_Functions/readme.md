@@ -27,9 +27,77 @@ List of Modules and generalized purpose if not clear by name:
 Functions in each script can have their help contents retrieved like other 
 
 
-# AdminUsers
-find-ws1AdminUser
-new-ws1AdminUser
-set-ws1AdminUser
-remove-ws1AdminUser
-get-ws1AdminUser
+## AdminUsers
+* find-ws1AdminUser
+* new-ws1AdminUser
+* set-ws1AdminUser
+* remove-ws1AdminUser
+* get-ws1AdminUser
+
+##Apps
+* get-ws1AppDetails
+
+##ConnectionConfig
+* new-ws1RestConnection
+* select-ws1Config
+* get-ws1SettingsFile
+* test-ws1EnvConfigFile
+* add-ws1RestConfig
+* update-ws1EnvConfigFile
+* convertTo-ws1HeaderVersion
+* trace-ws1Error
+
+##CustomAttributes
+* get-ws1DeviceCustomAttribute
+
+##Devices
+* get-ws1BulkDeviceSettings
+* find-ws1Device
+* get-ws1Device
+* get-ws1BulkDevice
+* search-ws1Devices
+* clear-ws1Device
+* clear-ws1DeviceV2
+* remove-ws1Device
+* set-ws1Device
+* set-ws1DeviceManagedSettings
+* remove-ws1BulkDevice
+* send-ws1Message
+* move-ws1Device
+* get-ws1DeviceCount
+* update-ws1DeviceOutput
+
+##InputFunctions
+* import-ws1DeviceCsv
+* import-ws1Csv (deprecated)
+* get-threadCount
+* get-ws1LogFolder
+* get-ws1InputArchive
+* new-ws1InputArchive
+* get-ws1Folders
+
+##OrgGroups
+* find-CustomerOGID
+* get-awOgTree
+* clear-awOrgTree
+* add-ws1OrgGroup
+* find-ws1OrgGroup
+* get-ws1OrgGroup
+
+##SmartGroups
+* get-ws1SmartGroup
+* find-ws1SmartGroup
+
+##TAGs
+* search-ws1Tags
+* set-ws1DeviceTag
+* get-ws1TaggedDevices
+
+##Users
+* new-ws1User
+* find-ws1User
+* get-ws1User
+* set-ws1User
+* update-ws1UserOutput
+* remove-ws1User
+* disable-ws1User
