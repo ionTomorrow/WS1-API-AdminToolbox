@@ -25,3 +25,11 @@ List of Modules and generalized purpose if not clear by name:
 
 
 Functions in each script can have their help contents retrieved like other 
+
+
+<hr>AdminUsers</hr>
+find-ws1AdminUser
+new-ws1AdminUser
+set-ws1AdminUser
+remove-ws1AdminUser
+get-ws1AdminUser
