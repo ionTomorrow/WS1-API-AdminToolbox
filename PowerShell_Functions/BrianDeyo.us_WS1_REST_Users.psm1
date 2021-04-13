@@ -344,11 +344,11 @@ function disable-ws1User {
 
 
     try {
-        $ws1user = Invoke-WebRequest -Method POST -uri https://$($headers.ws1ApiUri)/api/system/users/$($userId)/deactivate -Headers $headers
+        #$ws1user = Invoke-WebRequest -Method POST -uri https://$($headers.ws1ApiUri)/api/system/users/$($userId)/deactivate -Headers $headers
+        $ws1User = Invoke-RestMethod -Method POST -uri https://$($headers.ws1ApiUri)/api/system/users/$($userId)/deactivate -headers $headers
     }
     catch [exception] {
-        $ws1user = $error[0]
-
+        $ws1user = $error[0]        
     }
     
     return $ws1user
