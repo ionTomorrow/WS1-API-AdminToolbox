@@ -324,7 +324,7 @@ function remove-ws1User {
 }
 
 
-function deactivate-ws1User {
+function disable-ws1User {
     <#.SYNOPSIS
     Deactivates a User account
     .DESCRIPTION
