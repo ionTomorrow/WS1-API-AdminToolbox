@@ -14,10 +14,7 @@ Function New-WS1User {
         .DESCRIPTION
             Creates a new user account.
         .EXAMPLE
-            New-WS1User -
-        .PARAMETER ws1EnvUri
-            The URL to your API server. You can also use the Console URL
-   
+            New-WS1User -   
         .PARAMETER SecurityType
         .PARAMETER UserName
         .PARAMETER Password
@@ -35,9 +32,7 @@ Function New-WS1User {
 
   #>
 
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-            [string]$ws1EnvUri,
+    param (        
         [Parameter(Mandatory=$true, Position=1)]    
             [int]$SecurityType,
         [Parameter(Mandatory=$true, Position=2)]
@@ -97,7 +92,7 @@ Function New-WS1User {
     if ($StagingMode -ne $null) {$body.add("StagingMode", $StagingMode)}
     if ($StagingEnabled) {$body.add("DeviceStagingEnabled", $StagingEnabled)}
     
-    $ws1UserAdd = Invoke-Restmethod -Method POST -Uri https://$WS1EnvUri/api/system/users/adduser -Body (ConvertTo-Json $body) -Headers $Headers
+    $ws1UserAdd = Invoke-Restmethod -Method POST -Uri https://$($headers.ws1ApiUri)/api/system/users/adduser -Body (ConvertTo-Json $body) -Headers $Headers
     return $ws1UserAdd
 }
 
@@ -128,8 +123,7 @@ function find-ws1User {
         [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)]
             [Hashtable]$headers
         )
-        $headers = convertTo-ws1HeaderVersion -headers $headers -ws1ApiVersion 1
-        $ws1EnvUri = $headers.ws1ApiUri
+        $headers = convertTo-ws1HeaderVersion -headers $headers -ws1ApiVersion 1        
 
         $userSearch = Invoke-WebRequest -method GET -Uri https://$($headers.ws1ApiUri)/api/system/users/search?username=$username -Headers $headers
         return $userSearch
@@ -145,10 +139,7 @@ function get-ws1User {
             [Hashtable]$headers
     )
     
-    $ws1EnvApi = $headers.'aw-tenant-code'
-    $ws1EnvUri = $headers.ws1ApiUri
-
-    $ws1user = invoke-webrequest -Method GET -Uri https://$ws1EnvUri/api/system/users/$userId -Headers $headers
+    $ws1user = invoke-webrequest -Method GET -Uri https://$($headers.ws1ApiUri)/api/system/users/$userId -Headers $headers
     return $ws1user
 
 }
@@ -176,28 +167,28 @@ function set-ws1User {
         [Parameter(Mandatory=$false, Position=17)][ValidateSet("true","false")][string]$StagingEnabled
     )
 
-    $ws1EnvUri = $headers.ws1ApiUri
+    
  ### Creation of JSON payload
-if ($userId -ne $null) {
+if ($null -ne $userId) {
     $body = @{}
-    if ($ContactNumber -ne $null) {$body.Add("ContactNumber", $ContactNumber)}
-    if ($DisplayName -ne $null) {$body.Add("UserName", $DisplayName)}
-    if ($Password -ne $null) {$body.Add("Password", $Password)}
-    if ($FirstName -ne $null) {$body.Add("FirstName", $FirstName)}
-    if ($LastName -ne $null) {$body.Add("LastName", $LastName)}
-    if ($Email -ne $null) {$body.Add("Email", $Email)}
-    if ($MobileNumber -ne $null) {$body.Add("MobileNumber", $MobileNumber)}
-    if ($Group -ne $null) {$body.Add("Group", $Group)}
-    if ($LocationGroupId -ne $null) {$body.Add("LocationGroupId", $LocationGroupId)}
-    if ($Role -ne $null) {$body.Add("Role", $Role)}
-    if ($MessageType -ne $null) {$body.Add("MessageType", $MessageType)}
-    if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTypeId)}
-    if ($StagingMode -ne $null) {$body.add("StagingMode", $StagingMode)}
+    if ($null -ne $ContactNumber) {$body.Add("ContactNumber", $ContactNumber)}
+    if ($null -ne $DisplayName) {$body.Add("UserName", $DisplayName)}
+    if ($null -ne $Password) {$body.Add("Password", $Password)}
+    if ($null -ne $FirstName) {$body.Add("FirstName", $FirstName)}
+    if ($null -ne $LastName) {$body.Add("LastName", $LastName)}
+    if ($null -ne $Email) {$body.Add("Email", $Email)}
+    if ($null -ne $MobileNumber) {$body.Add("MobileNumber", $MobileNumber)}
+    if ($null -ne $Group) {$body.Add("Group", $Group)}
+    if ($null -ne $LocationGroupId) {$body.Add("LocationGroupId", $LocationGroupId)}
+    if ($null -ne $Role {$body.Add("Role", $Role)}
+    if ($null -ne $MessageType) {$body.Add("MessageType", $MessageType)}
+    if ($null -ne $MessageTemplateId) {$body.Add("MessageTemplateId", $MessageTypeId)}
+    if ($null -ne $StagingMode) {$body.add("StagingMode", $StagingMode)}
     if ($deviceStagingEnabled) {$body.add("deviceStagingEnabled", $deviceStagingEnabled)}
     if ($deviceStagingType) {$body.add("deviceStagingEnabled", $deviceStagingType)}
 }
 
-$ws1user = Invoke-WebRequest -Uri https://$ws1EnvUri/api/system/users/$userId/update -Method POST -Body (ConvertTo-Json $body) -Headers $headers
+$ws1user = Invoke-WebRequest -Uri https://$($headers.ws1ApiUri)/api/system/users/$userId/update -Method POST -Body (ConvertTo-Json $body) -Headers $headers
 return $ws1User
 }
 
@@ -218,36 +209,36 @@ Function update-ws1UserOutput {
         [Parameter(Mandatory=$true, Position=0)][array]$user,
         [Parameter(Mandatory=$true, Position=0)][ValidateSet("users","admins")][array]$userType
     )
-    if (!$user.FirstName) {$user | add-member -Name "FirstName" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-    if (!$user.LastName) {$user | add-member -Name "LastName" -MemberType NoteProperty -Value "NoSampleRetrieved"}   
-    if ($user.Email -eq $null) {$user | add-member -Name "Email" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-    if (!$user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-    if (!$user.OrganizationGroupUuid) {$user | add-member -Name "OrganizationGroupUuid" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-    if (!$user.Id) {$user | add-member -Name "Id" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-    if (!$user.Uuid) {$user | add-member -Name "Uuid" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($null -eq $user.FirstName) {$user | add-member -Name "FirstName" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($null -eq $user.LastName) {$user | add-member -Name "LastName" -MemberType NoteProperty -Value "NoSampleRetrieved"}   
+    if ($null -eq $user.Email) {$user | add-member -Name "Email" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($null -eq $user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($null -eq $user.OrganizationGroupUuid) {$user | add-member -Name "OrganizationGroupUuid" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($null -eq $user.Id) {$user | add-member -Name "Id" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+    if ($null -eq $user.Uuid) {$user | add-member -Name "Uuid" -MemberType NoteProperty -Value "NoSampleRetrieved"}
 
     switch ($userType) {
         "admins" {
-            if (!$user.LocationGroup) {$user | add-member -Name "LocationGroup" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.TimeZone) {$user | add-member -Name "TimeZone" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.Locale) {$user | add-member -Name "Locale" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.InitialLandingPage) {$user | add-member -Name "InitialLandingPage" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.LastLoginTimeStamp) {$user | add-member -Name "LastLoginTimeStamp" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.Roles) {$user | add-member -Name "Roles" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.IsActiveDirectoryUser) {$user | add-member -Name "IsActiveDirectoryUser" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.RequiresPasswordChange) {$user | add-member -Name "RequiresPasswordChange" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.MessageTemplateId) {$user | add-member -Name "MessageTemplateId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.LocationGroup) {$user | add-member -Name "LocationGroup" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.TimeZone) {$user | add-member -Name "TimeZone" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.Locale) {$user | add-member -Name "Locale" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.InitialLandingPage) {$user | add-member -Name "InitialLandingPage" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.LastLoginTimeStamp) {$user | add-member -Name "LastLoginTimeStamp" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.Roles) {$user | add-member -Name "Roles" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.IsActiveDirectoryUser) {$user | add-member -Name "IsActiveDirectoryUser" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.RequiresPasswordChange) {$user | add-member -Name "RequiresPasswordChange" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.MessageTemplateId) {$user | add-member -Name "MessageTemplateId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
         }
         "users" {
-            if (!$user.Status) {$user | add-member -Name "Status" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.SecurityType) {$user | add-member -Name "SecurityType" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.Status) {$user | add-member -Name "Status" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.SecurityType) {$user | add-member -Name "SecurityType" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.ContactNumber) {$user | add-member -Name "ContactNumber" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.MobileNumber) {$user | add-member -Name "MobileNumber" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.MessageType) {$user | add-member -Name "MessageType" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.EmailUserName) {$user | add-member -Name "EmailUserName" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.Group) {$user | add-member -Name "Group" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
-            if (!$user.Role) {$user | add-member -Name "Role" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.Group) {$user | add-member -Name "Group" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.LocationGroupId) {$user | add-member -Name "LocationGroupId" -MemberType NoteProperty -Value "NoSampleRetrieved"}
+            if ($null -eq $user.Role) {$user | add-member -Name "Role" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.EnrolledDevicesCount) {$user | add-member -Name "EnrolledDevicesCount" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.CustomAttribute1) {$user | add-member -Name "CustomAttribute1" -MemberType NoteProperty -Value "NoSampleRetrieved"}
             if ($null -eq $user.CustomAttribute2) {$user | add-member -Name "CustomAttribute2" -MemberType NoteProperty -Value "NoSampleRetrieved"}
