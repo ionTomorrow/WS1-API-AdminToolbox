@@ -180,7 +180,7 @@ if ($null -ne $userId) {
     if ($null -ne $MobileNumber) {$body.Add("MobileNumber", $MobileNumber)}
     if ($null -ne $Group) {$body.Add("Group", $Group)}
     if ($null -ne $LocationGroupId) {$body.Add("LocationGroupId", $LocationGroupId)}
-    if ($null -ne $Role {$body.Add("Role", $Role)}
+    if ($null -ne $Role) {$body.Add("Role", $Role)}
     if ($null -ne $MessageType) {$body.Add("MessageType", $MessageType)}
     if ($null -ne $MessageTemplateId) {$body.Add("MessageTemplateId", $MessageTypeId)}
     if ($null -ne $StagingMode) {$body.add("StagingMode", $StagingMode)}

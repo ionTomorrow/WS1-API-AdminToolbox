@@ -21,3 +21,6 @@ get-ws1Folders
 
 ###Set TLS version
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+
+write-host -ForegroundColor Cyan "use the command select-ws1config to get started!"

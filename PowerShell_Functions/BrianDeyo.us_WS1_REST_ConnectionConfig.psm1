@@ -130,7 +130,8 @@ function select-WS1Config {
         write-host "     [3] - Create new WS1Config File"
         Write-Host "     [4] - Add new Environment to existing WS1settings file"
         Write-Host "     [5] - Import Existing file from old install"
-        Write-Host "     [6] - EXIT"
+        Write-Host "     [6] - Exit to PowerShell prompt"
+        Write-Host "     [7] - EXIT PowerShell session completely"
     
         switch ([int]$menuChoice = Read-host -Prompt "Select an option to start") {
             1 {
@@ -139,7 +140,7 @@ function select-WS1Config {
             2 {
                 $ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
                 $ws1ApiKey = Read-Host -Prompt "What is the API key?"
-                New-ws1RestConnection -apiUri $ws1ApiUri -apikey $ws1ApiKey
+                $ws1RestConnection = New-ws1RestConnection -apiUri $ws1ApiUri -apikey $ws1ApiKey
             }
             3 {
                 Update-ws1EnvConfigFile
@@ -151,6 +152,10 @@ function select-WS1Config {
                 Update-ws1EnvConfigFile
             }
             6 {
+                #do nothing to end function
+
+            }
+            7 {
                 ###Must Exit entirety of Powershell, not just this switch or function. This will also exist the PowerShell ISE.
                 [Environment]::Exit(1)
             }
