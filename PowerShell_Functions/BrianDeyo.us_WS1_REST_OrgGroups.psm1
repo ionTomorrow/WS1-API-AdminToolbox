@@ -5,27 +5,13 @@
 ###
 ###############################
 
-Function Find-CustomerOGID {
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
-        [Parameter(Mandatory=$true, Position=2,ValueFromPipelineByPropertyName=$true)]
-        [Hashtable]$headers
-        )
-    $WS1CustomerOG = Invoke-RestMethod -Method GET -Uri https://$WS1Host/api/system/groups/search?type=customer -Headers $headers
-
-    return $WS1CustomerOG.LocationGroups.Id.value
-}
-
 
 Function Find-CustomerOGID {
     param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
         [Parameter(Mandatory=$true, Position=2,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
         )
-    $WS1CustomerOG = Invoke-RestMethod -Method GET -Uri https://$WS1Host/api/system/groups/search?type=customer -Headers $headers
+    $WS1CustomerOG = Invoke-RestMethod -Method GET -Uri https://$($headers.ws1ApiUri)/api/system/groups/search?type=customer -Headers $headers
 
     return $WS1CustomerOG.LocationGroups.Id.value
 }
@@ -143,7 +129,7 @@ Function Add-WS1OrgGroup {
     return $newAwOg
 }
 
-##Must Fix the String Building 2019-09-20 -- doesn't work!
+
 Function Find-WS1OrgGroup {
  <#
     .SYNOPSIS

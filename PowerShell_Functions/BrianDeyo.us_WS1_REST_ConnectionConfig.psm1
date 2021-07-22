@@ -48,11 +48,10 @@ Function New-ws1RestConnection {
         ###Need to add code to validate creds are entered & fail gracefully if not
         Do {
             $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
-        
-            
+                    
             $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
         
-            #Test the Headres build
+            #Test the Headers build
             $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri";'ws1ApiAdmin' = "$($credential.username)"}
             write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
 
@@ -75,10 +74,6 @@ Function New-ws1RestConnection {
             }
 
         } Until ($testWs1Connection.statusCode -eq 200)
-
-        
-
-        
         
     return $headers
 }
@@ -129,20 +124,33 @@ function test-ws1RestConnection {
 
 function select-WS1Config {
    
-
     Do {
-        Write-host "1 - Use existing WS1Settings file"
-        Write-Host "2 - Add new Environment, create new WS1Settings file, or import old file"
-        Write-Host "3 - EXIT"
+        Write-host "     [1] - Use existing WS1Settings file"
+        Write-Host "     [2] - Create temporary session headers and do not save API key to this computer"
+        write-host "     [3] - Create new WS1Config File"
+        Write-Host "     [4] - Add new Environment to existing WS1settings file"
+        Write-Host "     [5] - Import Existing file from old install"
+        Write-Host "     [6] - EXIT"
     
-        switch ($menuChoice = Read-host -Prompt "Select an option to start") {
+        switch ([int]$menuChoice = Read-host -Prompt "Select an option to start") {
             1 {
                 $ws1RestConnection = get-ws1SettingsFile
             }
             2 {
-                Update-ws1EnvConfigFile
+                $ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
+                $ws1ApiKey = Read-Host -Prompt "What is the API key?"
+                New-ws1RestConnection -apiUri $ws1ApiUri -apikey $ws1ApiKey
             }
             3 {
+                Update-ws1EnvConfigFile
+            }
+            4 {
+                Update-ws1EnvConfigFile
+            }
+            5 {
+                Update-ws1EnvConfigFile
+            }
+            6 {
                 ###Must Exit entirety of Powershell, not just this switch or function. This will also exist the PowerShell ISE.
                 [Environment]::Exit(1)
             }

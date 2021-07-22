@@ -19,17 +19,14 @@ Function Get-WS1BulkDeviceSettings {
         .DESCRIPTION
             Retreive limits for BUlk actions on devices
         .EXAMPLE
-            Get-WS1BulkDeviceSettings -WS1Host xx123.awmdm.com -headers (HeaderHashTable)
-        .PARAMETER WS1Host
-            The URL to your API server. You can also use the Console URL 
+            Get-WS1BulkDeviceSettings -headers (HeaderHashTable)
+        
   #>
 param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
-        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=1,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
      )
-     $ws1BulkDeviceSettings = Invoke-WebRequest -Uri https://$WS1Host/api/mdm/devices/bulksettings -Method GET -Headers $headers
+     $ws1BulkDeviceSettings = Invoke-WebRequest -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/bulksettings -Method GET -Headers $headers
      return $ws1BulkDeviceSettings
 }
 
@@ -42,6 +39,14 @@ param (
 
 <# Send a QUERY or a SYNC command to a device #>
 Function Find-ws1Device {
+    <#
+        .SYNOPSIS
+            Issue a QueryAll or Sync to a device
+        .DESCRIPTION
+            Query or Sync
+        .EXAMPLE
+            Get-WS1BulkDeviceSettings -headers (HeaderHashTable)        
+  #>
 param (
         [Parameter(Mandatory=$true, Position=1)][string]$id,
         [Parameter(Mandatory=$true, Position=2)][ValidateSet("Query","SyncDevice")][string]$searchType,
@@ -79,7 +84,7 @@ Function Get-WS1BulkDevice {
         .DESCRIPTION
             Retrieve Device Details for more than a single device. Useful to reduce total number of API queries. This is intended for use from a script and not necessarily useful from the command line itself.
         .EXAMPLE
-            Get-WS1BulkDevice -WS1Host xx123.awmdm.com -searchBy SerialNumber -bulkIdList (ARRAY OBJECT) "Asset123" -ownership "CorporateShared" -headers (HeaderHashTable)
+            Get-WS1BulkDevice -searchBy {AlternateIDtype} -bulkIdList {ARRAY OBJECT} -headers {HeaderHashTable}
         .PARAMETER awHost
             The URL to your API server. You can also use the Console URL
         .PARAMETER searchBy
@@ -118,6 +123,7 @@ Retrieve *all* devices from an Environment
 
 ###Change Log
     2020-06-30 - Brian@BrianDeyo.us         changed $LGID to mandatory. Without the OGID large environments could be a problem since it defaults to customer OG.
+    2021-04-12 - Brian@BrianDeyo.us         Updated Query string to use function
 #>
 Function Search-ws1Devices {
     param(
@@ -136,12 +142,19 @@ Function Search-ws1Devices {
         [Parameter(mandatory=$false, Position=12)][bool]$allRecords,
         [Parameter(mandatory=$true, Position=13)][hashtable]$headers
     )
+
+    [hashtable]$stringBuild = @{}
+    $parameterList= @("user","model","platform","lastSeen","ownership","lgId","compliantStatus","seenSince","page","pageSize","orderBy","sortOrder","allRecords")
+    $parameterList.foreach({
+        $param = Get-Variable $_ -ErrorAction SilentlyContinue
+        if ($param) {$stringBuild.Add("$($param.name)",$param.Value)}
+    })   
+    $searchUri = "https://$($headers.ws1ApiUri)/api/mdm/devices/search"
+    $uri = New-HttpQueryString -Uri $searchUri -QueryParameter $stringBuild    
     
-    
-    
-    $dev = $null
-    $dev = Invoke-RestMethod -Method GET -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/search?lgid=$lgID"&"page=$page"&"pagesize=$pageSize -Headers $headers
-    return $dev.Devices
+    $device = $null
+    $device = Invoke-RestMethod -Method GET -Uri $uri -Headers $headers
+    return $device.Devices
 }
 
 
@@ -267,28 +280,6 @@ Function Clear-ws1DeviceV2 {
  
 
 
-function test-parameterSet {
-    [CmdletBinding(DefaultParametersetName='None')] 
-param( 
-    [Parameter(Position=0,Mandatory=$true)] [string]$Age, 
-    [Parameter(Position=1,Mandatory=$true)] [string]$Sex, 
-    [Parameter(Position=2,Mandatory=$true)] [string]$Location,
-    [Parameter(ParameterSetName='Extra',Mandatory=$false)][switch]$Favorite,      
-    [Parameter(ParameterSetName='Extra',Mandatory=$true)][string]$FavoriteCar
-)
-
-$ParamSetName = $PsCmdLet.ParameterSetName
-    
-Write-Output "Age: $age"
-Write-Output "Sex: $sex"
-Write-Output "Location: $Location"
-Write-Output "Favorite: $Favorite"
-Write-Output "Favorite Car: $FavoriteCar"
-Write-Output "ParamSetName: $ParamSetName"
-}
-
-
-    
 <# Permanently Delete a Device
 #>
 
@@ -323,9 +314,7 @@ Function Set-ws1Device {
         .DESCRIPTION
             Change Asset Tag, Device Friendly Name, or Ownership type for a single device.
         .EXAMPLE
-            Set-AwDevice -awHost xx123.awmdm.com -idType SerialNumber "serial1234" -assetNumber "Asset123" -ownership "CorporateShared"
-        .PARAMETER awHost
-            The URL to your API server. You can also use the Console URL
+            Set-AwDevice -awHost xx123.awmdm.com -idType SerialNumber "serial1234" -assetNumber "Asset123" -ownership "CorporateShared"        
         .PARAMETER idType
             Unique Identifier used to specify which devices to edit. Possible values include : MacAddress,UDID,SerialNumber
         .PARAMETER assetNumber
@@ -460,9 +449,7 @@ Function Remove-BulkWS1Device {
     .PARAMETER bulkSnList
     Comma-separated Hashtable of Unique Identifers you want to delete. Must match type specified by SearchBy parameter
   #>
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
+    param (        
         [Parameter(Mandatory=$true, Position=1)]
         [ValidateSet("DeviceID","Macaddress","Udid","SerialNumber","ImeiNumber")]
         [string]$SearchBy,
@@ -476,10 +463,10 @@ Function Remove-BulkWS1Device {
                 BulkValues = @{Value = @($bulkDeviceList.Values)}
             }
     if ($SearchBy -eq "DeviceID") {
-        $WS1Delete = Invoke-Restmethod -Method POST -Uri https://$WS1host/api/mdm/devices/bulk -Headers $Headers
+        $WS1Delete = Invoke-Restmethod -Method POST -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/bulk -Headers $Headers
         }
     else {
-        $WS1Delete = Invoke-Restmethod -Method POST -Uri https://$WS1host/api/mdm/devices/bulk?searchby=$SearchBy -Body (ConvertTo-Json $body) -Headers $Headers
+        $WS1Delete = Invoke-Restmethod -Method POST -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/bulk?searchby=$SearchBy -Body (ConvertTo-Json $body) -Headers $Headers
     }
 
     
@@ -502,8 +489,7 @@ Function send-WS1Message {
     .DESCRIPTION
     Send a message to a single device or in Bulk
     .EXAMPLE
-    send-WS1Message -WS1Host -
-    .PARAMETER WS1Host
+    send-WS1Message -sendCount Single -searchBy DeviceID 1234 -messageType Push -message "This is a test Push message" -headers $headers
     .PARAMETER sendCount
     .PARAMETER SearchBy
     .PARAMETER deviceId
@@ -512,9 +498,7 @@ Function send-WS1Message {
     .PARAMETER headers
     
     #>
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
+    param (        
         [Parameter(Mandatory=$true, Position=1)]
         [ValidateSet("Single","Bulk")]
         [String]$sendCount,
@@ -555,15 +539,12 @@ Function move-ws1Device {
     
     .EXAMPLE
     move-ws1Device -WS1Host xxxxx.awmdm.com -
-    .PARAMETER WS1Host
     .PARAMETER SearchBy
     .PARAMETER deviceId
     .PARAMETER ogId
     .PARAMETER headers
     #>
     param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
         [Parameter(Mandatory=$true, Position=1)]
         [ValidateSet("DeviceID","Macaddress","Udid","SerialNumber","ImeiNumber")]
         [string]$SearchBy,
@@ -576,10 +557,10 @@ Function move-ws1Device {
     )
 
     If ($SearchBy -ne "DeviceID") {
-        $ws1DeviceMove = Invoke-WebRequest -Method POST -Uri https://$ws1Host/api/mdm/devices/commands/changeorganizationgroup?searchby=$SearchBy"&"id=$DeviceId"&"ogid=$ogid -Headers $headers
+        $ws1DeviceMove = Invoke-WebRequest -Method POST -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/commands/changeorganizationgroup?searchby=$SearchBy"&"id=$DeviceId"&"ogid=$ogid -Headers $headers
     }
     elseif ($SearchBy -eq "DeviceID") {
-        $ws1DeviceMove = Invoke-WebRequest -Method PUT -Uri https://$ws1Host/api/mdm/devices/$DeviceId/commands/changeorganizationgroup/$ogID -Headers $headers   
+        $ws1DeviceMove = Invoke-WebRequest -Method PUT -Uri https://$($headers.ws1ApiUri)/api/mdm/devices/$DeviceId/commands/changeorganizationgroup/$ogID -Headers $headers   
     }
     else {
         return;
@@ -601,7 +582,6 @@ Function get-ws1DeviceCount {
     
     .EXAMPLE
     get-ws1DeviceCount -ogId 570 -headers $headers
-    .PARAMETER WS1Host
     .PARAMETER SearchBy
     .PARAMETER deviceId
     .PARAMETER ogId

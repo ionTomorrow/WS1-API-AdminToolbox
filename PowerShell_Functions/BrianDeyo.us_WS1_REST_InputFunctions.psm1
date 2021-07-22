@@ -1,66 +1,4 @@
-﻿<#Technical Debt Log
-
-Change the import to automatically strip off the .csv if someone includes it. 
-    https://techibee.com/powershell/get-filename-with-or-without-extension-from-full-path-using-powershell/2800
-
-Importing a bad filename is going to result in an error and not return anything of value.
-
-#>
-
-
-Function Import-WS1DeviceCsv {
-    param(
-        [Parameter(Mandatory=$true,Position=0)][string]$defaultFilename,
-        [Parameter(Mandatory=$false,Position=1)][bool]$GetFileHash,
-        [Parameter(Mandatory=$false,Position=2)][string]$ColumnName
-    )
-
-    <#Retrieve CSV from input directory #>
-    write-host `n
-    $inputPath = ((get-location).path)+"\input\"
-    #Write-host -ForegroundColor Cyan "The expectation is that the .csv file with Serial Numbers is found in the $inputPath Scripting folder."
-    $inputList = @()
-    $inputCsv = $null
-    
-    
-    
-    Do {
-    $inputCsv = Read-Host -Prompt "please input name of the csv (without .csv extension) that includes the serial numbers. Press enter to use default file name ($defaultFilename)"
-    
-        Try {
-            if ($null -eq $inputCsv) {
-                $inputCsv = $defaultFilename
-            }
-            
-            $validCsv = Test-Path -Path $inputpath$inputCsv".csv"
-            $verifyCsv = get-item -path $inputpath$inputCsv".csv"
-            $verifyCsvFileName = $verifyCsv.name   
-            $hashCsv = ($verifyCsv | Get-FileHash -Algorithm SHA256).hash
-            $inputList = import-csv $inputPath$verifyCsvFilename
-            
-            <#if (!$ColumnName) {
-                $inputList
-                [string]$columnName = Read-Host "what is the column name?"
-            }#>
-        }
-        Catch {
-            write-host -ForegroundColor Red "Error Importing filename"
-            $validCsv = $false
-        }
-    }
-    Until ($validCsv -ne $false)
-
-    ###return imported CSV as an object and the filehash if requested by script.
-    ###Multiple values can be retrieved by accessing results like an array - https://social.technet.microsoft.com/Forums/ie/en-US/65d3bf7f-c710-498a-b535-46c64cbf92e7/return-multiple-values-in-powershell?forum=ITCG
-    Return $inputList
-#    Return $ColumnName
-    if ($GetFileHash) {
-        Return $hashCsv
-    }
-
-}
-
-Function Import-WS1Csv {
+﻿Function Import-WS1Csv {
     <#.SYNOPSIS
     Imports a .csv and obtains specific characteristics of the .csv useable for WS1 scripts and functions
     .DESCRIPTION
@@ -81,8 +19,6 @@ Function Import-WS1Csv {
     .PARAMETER getFileHash
     .PARAMETER uniqueHeader
     .PARAMETER inputCsv
-    
-
     #>
     param(
         [Parameter(Mandatory=$true,Position=0)][string]$defaultFilename,
@@ -213,16 +149,6 @@ Function Import-WS1Csv {
 
 }
 
-function New-WS1Batch {
-    param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$batchsize,
-        [Parameter(Mandatory=$true, Position=1)]
-        [hashtable]$batchInput
-    )
-}
-
-
 function get-threadCount {
     <#
     .SYNOPSIS
@@ -271,29 +197,24 @@ function get-threadCount {
 ###############################>
 
 Function get-timestamp() {
+    <#
+    .SYNOPSIS
+    Create a consistent timestamp format for any logs or folders created from the WS1 scripts
+    
+    .DESCRIPTION
+    Create a consistent timestamp format for any logs or folders created from the WS1 scripts
+    
+    .EXAMPLE
+    $example = get-timestamp
+    
+    .NOTES
+    This probably isn't necessary if you are not logging output from your scripts.
+
+    #>
     $WS1LogTime = Get-Date -Format yyyyMMdd.HH.mm.ss
     return $WS1LogTime
 }
 
-<#
-Function Update-WS1Log{
-param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [ValidateSet("PreCheck","Error","PostCheck")]
-        [string]$logType,
-        [Parameter(Mandatory=$true, Position=1)]
-        [ValidateSet("iOS","Windows")]
-        [string]$platform
-       <# UnitID
-        ErrorCode
-        ErrorMessage
-        ErrorActivityID
-        
-
-        )
-
-}
-#>
 
 
 ###Logging Format Setup
@@ -301,6 +222,22 @@ param (
 ### Took hints from https://stackoverflow.com/questions/31982926/new-item-changes-function-return-value to use the | Out-NULL to remove extra paths with New-Item
 
 Function get-ws1LogFolder {
+    <#
+    .SYNOPSIS
+    Create a hierarchy of folders used to stored output
+    
+    .DESCRIPTION
+    It's a common practice to store the log data associated with running scripts against WS1 API. 
+    After a few dozen script runs it becomes very tedious to parse log files. Having pre-built nested folders for logging can reduce this problem.
+    
+    .EXAMPLE
+    $example = get-ws1LogFolder
+    $output_from_other_script | export-csv -path $example -noTypeInformation -append
+    
+    .NOTES
+    This probably isn't necessary if you are not logging output from your scripts.
+
+    #>
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string]$ws1EnvUri
@@ -400,13 +337,59 @@ Function new-ws1InputArchive {
 
 ###Create necessary subfolders if they don't already exist.
 function get-ws1Folders {
-$folders = @("code","config","documentation","input","output","tools","test")
+$folders = @("config","input","output")
 foreach ($folder in $folders) {
     If (Test-Path .\$folder) {
-        write-host "$folder Found!"
     }
     else {
         New-Item -ItemType Directory $folder
     }
 }
 }
+
+
+###Query string function from https://www.powershellmagazine.com/2019/06/14/pstip-a-better-way-to-generate-http-query-strings-in-powershell/
+function New-HttpQueryString
+<#
+.SYNOPSIS
+A cleaner way to create a query string used by many of the search-ws1* cmdlets
+
+.DESCRIPTION
+This was created here and is included because it is useful. 
+https://www.powershellmagazine.com/2019/06/14/pstip-a-better-way-to-generate-http-query-strings-in-powershell/
+
+.NOTES
+This script should not be called directly, it is used as part of the other functions.
+
+#>
+{
+    [CmdletBinding()]
+    param 
+    (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $Uri,
+ 
+        [Parameter(Mandatory = $true)]
+        [Hashtable]
+        $QueryParameter
+    )
+ 
+    # Add System.Web
+    Add-Type -AssemblyName System.Web
+ 
+    # Create a http name value collection from an empty string
+    $nvCollection = [System.Web.HttpUtility]::ParseQueryString([String]::Empty)
+ 
+    foreach ($key in $QueryParameter.Keys)
+    {
+        $nvCollection.Add($key, $QueryParameter.$key)
+    }
+ 
+    # Build the uri
+    $uriRequest = [System.UriBuilder]$uri
+    $uriRequest.Query = $nvCollection.ToString()
+ 
+    return $uriRequest.Uri.OriginalString
+}
+ 

@@ -4,17 +4,6 @@
 ### ADMIN USERS
 #####
 
-
-
-function find-WS1AdminUserOLD {
-    $ws1EnvUri = $headers.ws1ApiUri
-    $deviceId = 1467
-    $searchBy = "username"
-    $username = "CDC"
-    $ws1AdminDetails = invoke-restmethod -Method GET -Uri https://$ws1EnvUri/api/system/admins/search?$searchby=$username -headers $headers
-    return $ws1AdminDetails
-}
-
 function find-ws1AdminUser {
     param (
         [Parameter(Mandatory=$false, Position=5)][string]$UserName,
@@ -29,18 +18,38 @@ function find-ws1AdminUser {
         [Parameter(Mandatory=$false, Position=2)][string]$Locale,
         [Parameter(Mandatory=$false, Position=5)][string]$InitialLandingPage,
         [Parameter(Mandatory=$false, Position=5)][string]$LastLoginTimeStamp,
-        [Parameter(Mandatory=$false, Position=4)][string]$Roles,
-        
+        [Parameter(Mandatory=$false, Position=4)][string]$Roles,    
         [Parameter(Mandatory=$false, Position=6)][int]$page,
         [Parameter(Mandatory=$false, Position=7)][int]$pagesize,
         [Parameter(Mandatory=$false, Position=8)][string]$orderBy,
         [Parameter(Mandatory=$false, Position=9)][ValidateSet("ASC","DESC")][string]$sortOrder,
         [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
         )
-        $ws1EnvApi = $headers.'aw-tenant-code'
-        $ws1EnvUri = $headers.ws1ApiUri
+      
+        [hashtable] $stringBuild =@{}
+        if ($UserName) {$stringBuild.add("Username",$UserName)}
+        if ($FirstName) {$stringBuild.add("Firstname",$FirstName)}
+        if ($LastName) {$stringBuild.add("LastName",$LastName)}
+        if ($Email) {$stringBuild.add("Email",$Email)}
+        if ($LocationGroup) {$stringBuild.add("LocationGroup",$LocationGroup)}
+        if ($LocationGroupId) {$stringBuild.add("LocationGroupId",$LocationGroupId)}
+        if ($OrganizationGroupUuid) {$stringBuild.add("OrganizationGroupUuid",$OrganizationGroupUuid)}
+        if ($TimeZone) {$stringBuild.add("TimeZone",$TimeZone)}
+        if ($TimeZoneIdentifier) {$stringBuild.add("TimeZoneIdentifier",$TimeZoneIdentifier)}
+        if ($Locale) {$stringBuild.add("Locale",$Locale)}
+        if ($InitialLandingPage) {$stringBuild.add("InitialLandingPage",$InitialLandingPage)}
+        if ($LastLoginTimeStamp) {$stringBuild.add("LastLoginTimeStamp",$LastLoginTimeStamp)}
+        if ($Roles) {$stringBuild.add("Roles",$roles)}
+        if ($page) {$stringBuild.add("page",$page)}
+        if ($pagesize) {$stringBuild.add("pagesize",$pagesize)}
+        if ($orderBy) {$stringBuild.add("orderBy",$orderBy)}
+        if ($sortOrder) {$stringBuild.add("sortOrder",$sortOrder)}
 
-        $userSearch = Invoke-WebRequest -method GET -Uri https://$ws1EnvUri/api/system/admins/search?username=$username -Headers $headers
+        
+        $searchUri = "https://$($headers.ws1ApiUri)/api/system/admins/search"
+        $uri = New-HttpQueryString -Uri $searchUri -QueryParameter $stringBuild
+
+        $userSearch = Invoke-WebRequest -method GET -Uri $uri -Headers $headers
         return $userSearch
 }
 
@@ -52,8 +61,8 @@ Function New-WS1AdminUser {
             Creates a new Admin user account.
         .EXAMPLE
             New-WS1AdminUser -
-        .PARAMETER ws1EnvUri
-            The URL to your API server. You can also use the Console URL
+        .PARAMETER headers
+            Generated from the select-ws1Config cmdlet
    
         .PARAMETER IsActiveDirectoryUser
         .PARAMETER UserName
@@ -93,12 +102,12 @@ Function New-WS1AdminUser {
         [Parameter(Mandatory=$true, Position=14,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
     )
 
-    $ws1Envuri = $headers.ws1ApiUri
+    
     ### Creation of JSON payload
     $body = @{}
     $body.Add("IsActiveDirectoryUser", $IsActiveDirectoryUser)
     
-
+###LDAP users should already have this information populated 
     if ($IsActiveDirectoryUser -eq $false) {
         if ($UserName -ne $null) {$body.Add("UserName", $UserName)}
         if ($Password -ne $null) {$body.Add("Password", $Password)}
@@ -113,7 +122,7 @@ Function New-WS1AdminUser {
         if ($MessageTemplateId -ne $null) {$body.Add("MessageTemplateId", $MessageTemplateId)}
     }
 
-    $ws1AdminAdd = Invoke-Restmethod -Method POST -Uri https://$WS1EnvUri/api/system/admins/addadminuser -Body (ConvertTo-Json $body) -Headers $Headers
+    $ws1AdminAdd = Invoke-Restmethod -Method POST -Uri https://$($headers.ws1ApiUri)/api/system/admins/addadminuser -Body (ConvertTo-Json $body) -Headers $Headers
     return $ws1AdminAdd
 }
 
@@ -229,10 +238,10 @@ function remove-ws1AdminUser {
 function get-ws1AdminUser {
     <#
         .SYNOPSIS
-            Delete an Admin account
+            Get an Admin account
         .DESCRIPTION
-            Deletes and Admin account using the V2 API
-            https://censusuat.awfed.com/api/help/#!/apis/10007?!/AdminsV2/AdminsV2_Get
+            Get an Admin account using the V2 API
+            https://$($headers.ws1ApiUri)/api/help/#!/apis/10007?!/AdminsV2/AdminsV2_Get
         .EXAMPLE
             get-ws1AdminUser -userUuid test1234 -headers $headers
         .PARAMETER userUuid
