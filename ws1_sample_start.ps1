@@ -1,6 +1,8 @@
 ﻿<#
     Clear Powershell $error Logging. This is most useful for debugging purposes as only the errors from the previous script will show up.
         Of course you must press ctrl+c to exit before they are cleared.
+
+        This entire thing be discarded. It would be much cleaner to have a start-ws1ToolBox cmdlet, that imports the modules and automatically launches the select-ws1config cmdlet
 #>
 $error.clear()
 ###Clear the Screen
