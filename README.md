@@ -1,2 +1,4 @@
-# WS1
-Private Workspace ONE functions
+# Workspace ONE REST API 
+#
+# This is a series of reuseable PowerShell Core cmdlets targeting common admin functions 
+
