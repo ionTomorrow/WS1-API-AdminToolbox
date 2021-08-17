@@ -25,4 +25,4 @@ get-ws1Folders
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 
-write-host -ForegroundColor Cyan "use the command select-ws1config to get started!"
+write-host -ForegroundColor Cyan "use the command '$headers = select-ws1config' to get started!"
