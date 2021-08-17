@@ -1,4 +1,14 @@
-﻿###Consider it best practice to create an API Key for every account that needs API access. Easier to manage access that way.
+﻿<#
+Copyright 2016-2021 Brian Deyo
+Copyright 2021 VMware, Inc.
+SPDX-License-Identifier: MPL-2.0
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#>
+
+###Consider it best practice to create an API Key for every account that needs API access. Easier to manage access that way.
 
 ###Should use a script right here
 
@@ -306,6 +316,7 @@ function Update-ws1EnvConfigFile {
                 $ws1EnvApi = read-host -Prompt "Please type or paste your API KEY"
                 $ws1EnvUri = read-host -Prompt "Please input the URL you are connecting to (example: xx123.awmdm.com)"
                 $ws1EnvConfigFile = "config\ws1EnvConfig.csv"
+                $ws1EnvConfigPath = "config"
                 $i=0
                 if (Test-Path $ws1EnvConfigFile) {
                     write-host "Appending new environment to existing settings config"
@@ -313,6 +324,7 @@ function Update-ws1EnvConfigFile {
                 }
                 else {
                     $WS1Example = New-Object psobject -Property @{ws1EnvNumber=$i;ws1EnvName="ExampleEnvironment";ws1EnvApi="ExampleAPI";ws1EnvUri="ExampleURI"}
+                    New-Item -Path "config"-Name "ws1EnvConfig.csv" -ItemType File
                     $WS1Example | Export-Csv -Path $WS1EnvConfigFile -NoTypeInformation -Append
                     $i++
                 }
@@ -358,3 +370,52 @@ function convertTo-ws1HeaderVersion {
     }
     return $headers
 }
+
+<#
+    TEST FUNCTIONS
+#>
+function test-ws1EventNotification {
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+            [uri]$ws1EventListenerUri
+    )
+
+###Connect to API using Oauth
+$headers = @{'Content-type' = 'application/json'}
+
+$device= @{
+    'EventId' = 12345;
+    'DeviceId' = 1234;
+    'EventType' = 'PowerShell Test';
+    'EnrollmentUserId' = 123;    
+    'DeviceFriendlyName' = 'PowerShell Test';
+    'EventTime' = 'PowerShell Test';
+    'EnrollmentStatus' = 'PowerShell Test';
+    'CompromisedTimeStamp' = 'PowerShell Test';
+    'Udid' = 'PowerShell Test';
+    'SerialNumber' = 'PowerShell Test';
+    'AssetNumber' = 'PowerShell Test';
+    'EnrollmentEmailAddress' = 'PowerShell Test';
+    'EnrollmentUserName' = 'PowerShell Test';
+    'CompromisedStatus' = 'PowerShell Test';
+    'ComplianceStatus' = 'PowerShell Test';
+    'PhoneNumber' = 'PowerShell Test';
+    'MACAddress' = 'PowerShell Test';
+    'DeviceIMEI' = 'PowerShell Test';
+    'Platform' = 'PowerShell Test';
+    'OperatingSystem' = 'PowerShell Test';
+    'Ownership' = 'PowerShell Test';
+    'SIMMCC' = 'PowerShell Test';
+    'CurrentMCC' = 'PowerShell Test';
+    'OrganizationGroupName' = 'PowerShell Test';
+}
+
+$body = @{}
+$body = $device
+$eventTest = Invoke-WebRequest -Method Post -Uri $ws1EventListenerUri -body (convertto-json $body) -headers $headers
+
+return $eventTest
+}
+
+
+https://prod-160.westus.logic.azure.com:443/workflows/10f7e6f3bed745ddb1b1506b6673c9a0/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=bkBymkYcJDyFG_x-RkD0wFDHzFWtQzYut-GVux3qJ7U

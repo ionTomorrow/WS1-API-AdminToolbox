@@ -1,10 +1,11 @@
-﻿
-<#***********************************
-#  AirWatch REST API Functions
-#
-#   Brian Deyo
-#   2018-06-20
-#**********************************
+﻿<#
+Copyright 2016-2021 Brian Deyo
+Copyright 2021 VMware, Inc.
+SPDX-License-Identifier: MPL-2.0
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 ###Change Log
     2019-03-29 - modified Set-AwDevice to use new endpoint
@@ -314,7 +315,7 @@ Function Set-ws1Device {
         .DESCRIPTION
             Change Asset Tag, Device Friendly Name, or Ownership type for a single device.
         .EXAMPLE
-            Set-AwDevice -awHost xx123.awmdm.com -idType SerialNumber "serial1234" -assetNumber "Asset123" -ownership "CorporateShared"        
+            Set-ws1device -idType SerialNumber "serial1234" -assetNumber "Asset123" -ownership "CorporateShared"        
         .PARAMETER idType
             Unique Identifier used to specify which devices to edit. Possible values include : MacAddress,UDID,SerialNumber
         .PARAMETER assetNumber
