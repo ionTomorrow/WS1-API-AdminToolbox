@@ -3,3 +3,4 @@
 config/
 output/
 input/
+.DS_Store
