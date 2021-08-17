@@ -416,6 +416,3 @@ $eventTest = Invoke-WebRequest -Method Post -Uri $ws1EventListenerUri -body (con
 
 return $eventTest
 }
-
-
-https://prod-160.westus.logic.azure.com:443/workflows/10f7e6f3bed745ddb1b1506b6673c9a0/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=bkBymkYcJDyFG_x-RkD0wFDHzFWtQzYut-GVux3qJ7U
