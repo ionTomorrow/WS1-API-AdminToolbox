@@ -50,7 +50,7 @@ Function New-WS1User {
         [Parameter(Mandatory=$true, Position=2)]
             [string]$UserName,
         [Parameter(Mandatory=$false, Position=3)]
-            [string]$Password,
+            [secureString]$Password,
         [Parameter(Mandatory=$false, Position=4)]
             [string]$FirstName,
         [Parameter(Mandatory=$false, Position=5)]
@@ -88,7 +88,7 @@ Function New-WS1User {
     $body = @{}
     $body.Add("SecurityType", $SecurityType)
     if ($UserName -ne $null) {$body.Add("UserName", $UserName)}
-    if ($Password -ne $null) {$body.Add("Password", $Password)}
+    if ($Password -ne $null) {$body.Add("Password", (ConvertFrom-SecureString -AsPlainText $Password))}
     if ($FirstName -ne $null) {$body.Add("FirstName", $FirstName)}
     if ($LastName -ne $null) {$body.Add("LastName", $LastName)}
     if ($Status -eq "active") {$body.Add("Status", "true")}
@@ -160,20 +160,20 @@ function get-ws1User {
 ###Update Enrollment User's Details
 function set-ws1User {
     param (
-        [Parameter(Mandatory=$true, Position=0)]$UserId,
-        [Parameter(Mandatory=$false, Position=1)]$ContactNumber,
-        [Parameter(Mandatory=$false, Position=2)]$DisplayName,
-        [Parameter(Mandatory=$false, Position=3)]$Password,
-        [Parameter(Mandatory=$false, Position=4)]$FirstName,
-        [Parameter(Mandatory=$false, Position=5)]$LastName,
-        [Parameter(Mandatory=$false, Position=6)]$Email,
-        [Parameter(Mandatory=$false, Position=7)]$mobileNumber,
-        [Parameter(Mandatory=$false, Position=8)]$GroupId,
-        [Parameter(Mandatory=$true, Position=9)]$LocationGroupId,
-        [Parameter(Mandatory=$false, Position=10)]$Role,
-        [Parameter(Mandatory=$false, Position=11)][ValidateSet("Email","SMS","None")]$MessageType,
-        [Parameter(Mandatory=$false, Position=12)]$MessageTemplateId,
-        [Parameter(Mandatory=$false, Position=13)]$ExternalId,
+        [Parameter(Mandatory=$true, Position=0)][int]$UserId,
+        [Parameter(Mandatory=$false, Position=1)][string]$ContactNumber,
+        [Parameter(Mandatory=$false, Position=2)][string]$DisplayName,
+        [Parameter(Mandatory=$false, Position=3)][secureString]$Password,
+        [Parameter(Mandatory=$false, Position=4)][string]$FirstName,
+        [Parameter(Mandatory=$false, Position=5)][string]$LastName,
+        [Parameter(Mandatory=$false, Position=6)][string]$Email,
+        [Parameter(Mandatory=$false, Position=7)][string]$mobileNumber,
+        [Parameter(Mandatory=$false, Position=8)][int]$GroupId,
+        [Parameter(Mandatory=$true, Position=9)][int]$LocationGroupId,
+        [Parameter(Mandatory=$false, Position=10)][array]$Role,
+        [Parameter(Mandatory=$false, Position=11)][ValidateSet("Email","SMS","None")][string]$MessageType,
+        [Parameter(Mandatory=$false, Position=12)][int]$MessageTemplateId,
+        [Parameter(Mandatory=$false, Position=13)][string]$ExternalId,
         [Parameter(Mandatory=$true, Position=14)][Hashtable]$headers,
         [Parameter(Mandatory=$false, Position=16)][int]$StagingMode,
         [Parameter(Mandatory=$false, Position=17)][ValidateSet("true","false")][string]$StagingEnabled
@@ -185,7 +185,7 @@ if ($null -ne $userId) {
     $body = @{}
     if ($null -ne $ContactNumber) {$body.Add("ContactNumber", $ContactNumber)}
     if ($null -ne $DisplayName) {$body.Add("UserName", $DisplayName)}
-    if ($null -ne $Password) {$body.Add("Password", $Password)}
+    if ($null -ne $Password) {$body.Add("Password", (ConvertFrom-SecureString -AsPlainText $Password))}
     if ($null -ne $FirstName) {$body.Add("FirstName", $FirstName)}
     if ($null -ne $LastName) {$body.Add("LastName", $LastName)}
     if ($null -ne $Email) {$body.Add("Email", $Email)}
