@@ -27,8 +27,14 @@ List of Modules and generalized purpose if not clear by name:
 * TAGs.psm1
 * Users.psm1
 
+To use these cmdlets, they must be imported as modules. You can use the ./ws1_sample_start.ps1 script to import them. The modules reference each other to reduce code reuse, so you should import all of the modules and not skip any.
 
-Functions in each script can have their help contents retrieved like other 
+Once the modules have been imported, use select-ws1Config to get started. The select-ws1Config will walk you through how you want to connect to the API.
+
+
+
+Functions in each script can have their help contents retrieved like other cmdlets.
+    get-help *-ws1*
 
 
 ## AdminUsers
