@@ -30,7 +30,7 @@ These updated functions should be capable of working under PowerShell Core
 To use these cmdlets, they must be imported as modules. You can use the ./ws1_sample_start.ps1 script to import them. The modules reference each other to reduce code reuse, so you should import all of the modules and not skip any.
 
 ### 2. run select-ws1config
-    Once the modules have been imported, assign a variable to the `select-ws1Config` cmdlet to generate REST API Headers.
+Once the modules have been imported, assign a variable to the `select-ws1Config` cmdlet to generate REST API Headers.
     `$headers = select-ws1Config`
     
     The select-ws1Config will walk you through how you want to connect to the API.
@@ -38,7 +38,8 @@ To use these cmdlets, they must be imported as modules. You can use the ./ws1_sa
 
 ### 3. use cmdlets like any other PS cmdlet including tab completion.
 
-    When you need to use the **-header** parameter,
+When you need to use the **-header** parameter, you will use the variable assigned in USAGE setp 2. (i.e. `$headers = select-ws1Config`)
+    
 Functions in each script can have their help contents retrieved like other cmdlets.
     get-help *-ws1*
 
