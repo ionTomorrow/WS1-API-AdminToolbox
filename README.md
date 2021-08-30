@@ -10,7 +10,7 @@ The goal for this is to reduce the time for a WS1 admin to write scripts for the
 Let's focus on getting things done and not creating 10 ways to do the same thing.
 
 
-These updated functions should be capable of working under PowerShell Core
+These updated functions are intended to work with PowerShell Core. Please install that before you try to use the functions in these modules! https://github.com/PowerShell/PowerShell
 
 
 
