@@ -661,3 +661,4 @@ function set-ws1DeviceNote {
      [Parameter(Mandatory=$true,Position=0)][int]$deviceId
     )
 }
+
