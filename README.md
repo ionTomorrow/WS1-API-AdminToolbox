@@ -1,6 +1,4 @@
-# Workspace ONE REST API 
-#
-# This is a series of reuseable PowerShell Core cmdlets targeting common admin functions 
+WS1-API-AdminToolbox
 
 The primary purpose of this project is to create a set of reuseable cmdlets to interact with the WS1 API via PowerShell. 
 I have seen a lot of great scripts put online, but one thing I see in common is they all spend a lot of unnecessary effort re-creating basic functions. 
