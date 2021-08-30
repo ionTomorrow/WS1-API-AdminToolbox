@@ -1,5 +1,3 @@
-WS1-API-AdminToolbox
-
 The primary purpose of this project is to create a set of reuseable cmdlets to interact with the WS1 API via PowerShell. 
 I have seen a lot of great scripts put online, but one thing I see in common is they all spend a lot of unnecessary effort re-creating basic functions. 
 The publicly available APIs from VMware are reasonably well-documented and contain clearly known parameters.
@@ -12,34 +10,47 @@ These updated functions are intended to work with PowerShell Core. Please instal
 
 
 
-List of Modules and generalized purpose if not clear by name:
+## List of Modules and generalized purpose if not clear by name:
 
-* AdminUsers.psm1
-* Apps.psm1
+* AdminUsers.psm1 -- Work with Admin Accounts
 * ConnectionConfig.psm1 -- setup of the API connection, getting credentials, etc.
-* CustomAttributes.psm1
-* Devices.psm1
+* Devices.psm1 -- Work with Devices
 * InputFunctions.psm1 -- Functions for importing .csv files and helping setup scripting environment
-* OrgGroups.psm1
-* SmartGroups.psm1
-* TAGs.psm1
-* Users.psm1
+* OrgGroups.psm1 -- Work with OGs
+* SmartGroups.psm1 -- Work with SGs
+* TAGs.psm1 -- Work with TAGs
+* Users.psm1 -- Work with standard User accounts
+
+## USAGE
+### 1. Import cmdlets
+To use these cmdlets, they must be imported as modules. You can use the ./ws1_sample_start.ps1 script to import them. The modules reference each other to reduce code reuse, so you should import all of the modules and not skip any.
+
+### 2. run select-ws1config
+Once the modules have been imported, assign a variable to the `select-ws1Config` cmdlet to generate REST API Headers.
+    `$headers = select-ws1Config`
+    
+    The select-ws1Config will walk you through how you want to connect to the API.
 
 
-Functions in each script can have their help contents retrieved like other 
+### 3. use cmdlets like any other PS cmdlet including tab completion.
+
+When you need to use the **-header** parameter, you will use the variable assigned in USAGE setp 2. (i.e. `$headers = select-ws1Config`)
+    
+Functions in each script can have their help contents retrieved like other cmdlets.
+    get-help *-ws1*
 
 
 ## AdminUsers
+```
 * find-ws1AdminUser
 * new-ws1AdminUser
 * set-ws1AdminUser
 * remove-ws1AdminUser
 * get-ws1AdminUser
-
-## Apps
-* get-ws1AppDetails
+```
 
 ## ConnectionConfig
+```
 * new-ws1RestConnection
 * select-ws1Config
 * get-ws1SettingsFile
@@ -48,11 +59,10 @@ Functions in each script can have their help contents retrieved like other
 * update-ws1EnvConfigFile
 * convertTo-ws1HeaderVersion
 * trace-ws1Error
-
-## CustomAttributes
-* get-ws1DeviceCustomAttribute
+```
 
 ## Devices
+```
 * get-ws1BulkDeviceSettings
 * find-ws1Device
 * get-ws1Device
@@ -68,8 +78,10 @@ Functions in each script can have their help contents retrieved like other
 * move-ws1Device
 * get-ws1DeviceCount
 * update-ws1DeviceOutput
+```
 
 ## InputFunctions
+```
 * import-ws1DeviceCsv
 * import-ws1Csv (deprecated)
 * get-threadCount
@@ -77,25 +89,31 @@ Functions in each script can have their help contents retrieved like other
 * get-ws1InputArchive
 * new-ws1InputArchive
 * get-ws1Folders
+```
 
 ## OrgGroups
+```
 * find-CustomerOGID
 * get-awOgTree
 * clear-awOrgTree
 * add-ws1OrgGroup
 * find-ws1OrgGroup
 * get-ws1OrgGroup
-
+```
 ## SmartGroups
+```
 * get-ws1SmartGroup
 * find-ws1SmartGroup
+```
 
 ## TAGs
+```
 * search-ws1Tags
 * set-ws1DeviceTag
 * get-ws1TaggedDevices
-
+```
 ## Users
+```
 * new-ws1User
 * find-ws1User
 * get-ws1User
@@ -103,3 +121,4 @@ Functions in each script can have their help contents retrieved like other
 * update-ws1UserOutput
 * remove-ws1User
 * disable-ws1User
+```

@@ -16,16 +16,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 function find-ws1AdminUser {
     <#
         .SYNOPSIS
-            Create a new BASIC or DIRECTORY Admin User
+            PS Function for https://(Your WS1 URL)/api/help/#!/apis/10008?!/AdminsV1/AdminsV1_SearchAsync
         .DESCRIPTION
-            Creates a new Admin user account.
-
-            This cmdlet requires the -Roles parameter to havve an valid array as input.
+            Performs necessary checks and search for the admin users based on the request query.
         .EXAMPLE
             
         .PARAMETER headers
-            Generated from the select-ws1Config cmdlet
-           
+            Generated from the select-ws1Config cmdlet           
         .PARAMETER UserName
             Username in Workspace ONE. This can match on partial strings
         .PARAMETER FirstName
@@ -94,10 +91,11 @@ Function New-WS1AdminUser {
     <#
         .SYNOPSIS
             Create a new BASIC or DIRECTORY Admin User
+            https://cn1506.awmdm.com/api/help/#!/apis/10008?!/AdminsV1/AdminsV1_Put
         .DESCRIPTION
             Creates a new Admin user account.
 
-            This cmdlet requires the -Roles parameter to havve an valid array as input.
+            This cmdlet requires the -Roles parameter to have an valid array as input.
         .EXAMPLE
             New-WS1AdminUser -Username (username) -Password "(password)" -Firstname "(firstname)" -LastName "(surname)" -email (emailAddress) -IsActiveDirectoryUser $false -Roles $role -LocationGroupID <OGid> -headers $headers
         .PARAMETER headers
@@ -116,6 +114,7 @@ Function New-WS1AdminUser {
         .PARAMETER Locale
         .PARAMETER InitialLandingPage
         .PARAMETER Roles
+            ARRAY
         .PARAMETER RoleID
         .PARAMETER LocationGroupId
         .PARAMETER RequiresPasswordChange
@@ -170,9 +169,15 @@ Function Set-ws1AdminUser {
         .SYNOPSIS
             Create a new BASIC or DIRECTORY Admin User
         .DESCRIPTION
-            Creates a new Admin user account.
+            https://cn1506.awmdm.com/api/help/#!/apis/10008?!/AdminsV1/AdminsV1_UpdateAdminUser
+            https://cn1506.awmdm.com/api/help/#!/apis/10008?!/AdminsV1/AdminsV1_ChangePassword
+
+            Updates an existing admin user.
+            The -Password parameter needs to be a secureString to work
+                You can use the read-host -asSecureString cmdlet to securely capture the password.
+
         .EXAMPLE
-            Set-WS1AdminUser -
+            
         .PARAMETER ws1adminId
         .PARAMETER IsActiveDirectoryUser
         .PARAMETER UserName
@@ -250,7 +255,7 @@ function remove-ws1AdminUser {
             Delete an Admin account
         .DESCRIPTION
             Deletes and Admin account using the V2 API
-            https://censusuat.awfed.com/api/help/#!/apis/10007?!/AdminsV2/AdminsV2_Delete
+            https://cn1506.awmdm.com/api/help/#!/apis/10009?!/AdminsV2/AdminsV2_Delete
         .EXAMPLE
             Remove-ws1AdminUser -userUuid test1234 -headers $headers
         .PARAMETER userUuid
