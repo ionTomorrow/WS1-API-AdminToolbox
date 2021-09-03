@@ -8,11 +8,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #>
 
-###Consider it best practice to create an API Key for every account that needs API access. Easier to manage access that way.
-
-###Should use a script right here
-
-### Add-AwRestConfig will capture API settings and add them to a .csv file. If this .csv exists it will append these settings.
 
 ###############################
 ###
@@ -63,6 +58,76 @@ Function New-ws1RestConnection {
         
     return $headers
 }
+
+
+####Updated Auth connection to include basic, cba, oauth
+
+
+Function open-ws1RestConnection { 
+    param (
+        [Parameter(Mandatory=$true)]
+            [string]$ws1ApiUri,
+        [Parameter(ParameterSetName = "basic", Mandatory=$true)]
+        [Parameter(ParameterSetName = "cert", Mandatory=$true)]
+            [string]$ws1ApiKey,
+        [Parameter(Mandatory=$true)]
+            [string]
+            [ValidateSet("basic","cert","oauth")]
+            $authType
+    )
+
+###Need to add code to validate creds are entered & fail gracefully if not
+###Parameter set info: https://blog.simonw.se/powershell-functions-and-parameter-sets/
+    switch ($authType) {
+        "basic" {
+
+
+            ###Need to add code to validate creds are entered & fail gracefully if not
+            Do {
+                $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
+                        
+                $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
+            
+                #Test the Headers build
+                $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json;version=1';'ws1ApiUri' = "$ApiUri";'ws1ApiAdmin' = "$($credential.username)"}
+                write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
+
+                
+                ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
+                $testWs1Connection = test-ws1RestConnection -headers $headers
+                
+                if ($testWs1Connection  -ne "FAIL") {
+                $testResults = ConvertFrom-Json $testWs1Connection.content
+                    Write-Host "Conntected to:"
+                    foreach ($api in $testResults.Resources.Workspaces) {
+                        write-host -ForegroundColor Green "          " $api.location
+                    }
+                }
+                elseif ($testWs1Connection.statusCode -eq 1005) {
+                    write-host -ForegroundColor Yellow "     Invalid Credentials for environment. Please try again."
+                }
+                else {
+                    write-host -ForegroundColor Red "Connection Failed to $headers.ws1ApiUri"
+                }
+
+            } Until ($testWs1Connection.statusCode -eq 200)
+        }
+        "cert" {
+###Learned from https://dexterposh.blogspot.com/2015/01/powershell-rest-api-basic-cms-cmsurl.html
+        }
+        "oauth" {
+###Learned from https://www.brookspeppin.com/2021/07/24/rest-api-in-workspace-one-uem/
+###No APIKey necessary. Should put apiKey as a parameterSet
+        }
+    }
+        
+
+        
+    return $headers
+}
+
+
+
 
 ###Validate current connection is OK before continuing any script. This will prevent account lockout when entinering incorrect credentials
 function test-ws1RestConnection {
