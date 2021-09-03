@@ -20,29 +20,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ###
 ###############################
 
-
-Function New-AwRestConnection { 
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$apiUri,
-        [Parameter(Mandatory=$true, Position=1)]
-        [string]$apikey
-        )
-
-        ###Need to add code to validate creds are entered & fail gracefully if not
-        Do {
-        $Credential = Get-Credential -Message "Please Enter U&P for account that has AirWatch API Access."
-        }
-        Until ($Credential -ne $nul)
-        $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
-        
-        New-Variable -Name headers -option AllScope
-        $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2'}
-
-        write-host -ForegroundColor Cyan "Connecting to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
-    return $headers
-}
-
 ###Creation of Headers for use with scripted API calls.
 ### 2019-07-31 - Updated for WS1 branding and include URL in header for convenience
 Function New-ws1RestConnection { 
@@ -62,13 +39,12 @@ Function New-ws1RestConnection {
             $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
         
             #Test the Headers build
-            $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json';'version' = '2';'ws1ApiUri' = "$ApiUri";'ws1ApiAdmin' = "$($credential.username)"}
+            $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json;version=1';'ws1ApiUri' = "$ApiUri";'ws1ApiAdmin' = "$($credential.username)"}
             write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
 
             ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
             $testWs1Connection = test-ws1RestConnection -headers $headers
             
-
             if ($testWs1Connection  -ne "FAIL") {
             $testResults = ConvertFrom-Json $testWs1Connection.content
                 Write-Host "Conntected to:"
@@ -92,10 +68,9 @@ Function New-ws1RestConnection {
 function test-ws1RestConnection {
     param (
         [Hashtable]$headers
-        )
-        $apiUri = $headers.ws1ApiUri
+        )        
     Try {
-        $ws1connection = Invoke-WebRequest -Uri https://$apiUri/api/system/info -Headers $headers
+        $ws1connection = Invoke-WebRequest -Uri https://$($headers.ws1ApiUri)/api/system/info -Headers $headers
     }
     Catch  [System.Net.WebException] {
         if ($_.ErrorDetails) {
@@ -105,8 +80,7 @@ function test-ws1RestConnection {
             $errorEvent = $_.Exception
         }
         if ($ws1connection.statusCode -eq "200") {
-            ###Connection is OK
-            
+            ###Connection is OK            
         }
         elseif  ($errorEvent.errorCode -eq "1005") {
 
@@ -142,34 +116,36 @@ function select-WS1Config {
         Write-Host "     [5] - Import Existing file from old install"
         Write-Host "     [6] - Exit to PowerShell prompt"
         Write-Host "     [7] - EXIT PowerShell session completely"
-    
-        switch ([int]$menuChoice = Read-host -Prompt "Select an option to start") {
-            1 {
-                $ws1RestConnection = get-ws1SettingsFile
-            }
-            2 {
-                $ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
-                $ws1ApiKey = Read-Host -Prompt "What is the API key?"
-                $ws1RestConnection = New-ws1RestConnection -apiUri $ws1ApiUri -apikey $ws1ApiKey
-            }
-            3 {
-                Update-ws1EnvConfigFile
-            }
-            4 {
-                Update-ws1EnvConfigFile
-            }
-            5 {
-                Update-ws1EnvConfigFile
-            }
-            6 {
-                #do nothing to end function
+        
+        do {
+            switch ([int]$menuChoice = Read-host -Prompt "Select an option to start") {
+                1 {
+                    $ws1RestConnection = get-ws1SettingsFile
+                }
+                2 {
+                    $ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
+                    $ws1ApiKey = Read-Host -Prompt "What is the API key?"
+                    $ws1RestConnection = New-ws1RestConnection -apiUri $ws1ApiUri -apikey $ws1ApiKey
+                }
+                3 {
+                    Update-ws1EnvConfigFile
+                }
+                4 {
+                    Update-ws1EnvConfigFile
+                }
+                5 {
+                    Update-ws1EnvConfigFile
+                }
+                6 {
+                    #do nothing to end function
 
+                }
+                7 {
+                    ###Must Exit entirety of Powershell, not just this switch or function. This will also exist the PowerShell ISE.
+                    [Environment]::Exit(1)
+                }
             }
-            7 {
-                ###Must Exit entirety of Powershell, not just this switch or function. This will also exist the PowerShell ISE.
-                [Environment]::Exit(1)
-            }
-        }
+        } until ($menuChoice)
     }
     until ($ws1RestConnection -ne $null)
     return $ws1RestConnection
@@ -353,20 +329,40 @@ function Update-ws1EnvConfigFile {
 
 
 function convertTo-ws1HeaderVersion {
+    <#
+        .SYNOPSIS
+            Converts existing Headers from the select-ws1Config cmdlet to a specific API Version number
+        .DESCRIPTION
+            Some APIs have been enhanced over time and have different versions.
+            Often these higher-level versions are a superior API and include functions and parameters not found in earlier versions.
+
+            Do not use this function in isolation, it needs to be returned to a variable.
+
+            Some cmdlets call this function independently if the higher-level API is significantly better.
+            The default value of the select-ws1Config is Version 2. 
+        .EXAMPLE
+            $headers = convertTo-Ws1HeaderVersion -headers $headers -ws1APIVersion 2
+        .PARAMETER headers
+            Output from select-ws1Config
+        .PARAMETER ws1ApiVersion
+            The version of the API you are trying to call. 
+
+
+    #>
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [hashtable]$headers,
         [Parameter(Mandatory=$true, Position=1)]
-        [ValidateSet(1,2)][int]$ws1APIVersion
+        [ValidateSet(1,2,3,4)][int]$ws1APIVersion
         )
-
-        $headers.Remove("Accept")
-        $headers.Remove("Version")
-    if ($ws1ApiVersion -eq 1) {
-        $headers.Add("Accept","application/json;version=1")
-    }
-    elseif ($ws1ApiVersion -eq 2) {
-        $headers.Add("Accept","application/json;version=2")
+    $headers.Remove("Accept")
+    $headers.Remove("Version")
+    switch ($ws1ApiVersion) {
+        1 {$headers.Add("Accept","application/json;version=1")}
+        2 {$headers.Add("Accept","application/json;version=2")}
+        3 {$headers.Add("Accept","application/json;version=3")}
+        4 {$headers.Add("Accept","application/json;version=4")}
+        Default {$headers.Add("Accept","application/json;version=1")}
     }
     return $headers
 }

@@ -75,9 +75,9 @@ function find-ws1AdminUser {
         $searchUri = "https://$($headers.ws1ApiUri)/api/system/admins/search"
         $uri = New-HttpQueryString -Uri $searchUri -QueryParameter $stringBuild
 
-        #verbose
-        switch ($PSBoundParameters['Verbose']) {
-            ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent -eq $true) {
+        #debug
+        switch ($PSBoundParameters['debug']) {
+            ($PSCmdlet.MyInvocation.BoundParameters["debug"].IsPresent -eq $true) {
                 $adminSearch = Invoke-WebRequest -method GET -Uri $uri -Headers $headers
             }
             default {

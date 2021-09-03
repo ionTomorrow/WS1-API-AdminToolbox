@@ -60,20 +60,35 @@ param (
 
 
 Function Get-WS1Device {
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
-        [Parameter(Mandatory=$true, Position=1)]
+    <#
+        .SYNOPSIS
+            Retrieve Device Details for a single device
+        .DESCRIPTION
+            https://as135.awmdm.com/api/help/#!/apis/10002?!/Devices/Devices_GetByAlternateIdAsync
+            
+        .EXAMPLE
+            Get-WS1evice -searchBy {AlternateIDtype} -alternateId {uniqueIdentifier} -headers {HeaderHashTable}
+        .PARAMETER searchBy
+            Unique Identifier used to specify you are searching by.
+            Possible values include:
+                Macaddress, 2. Udid, 3. Serialnumber, 4. ImeiNumber, 5. EasId, 6. DeviceId.
+        .PARAMETER alternateId
+            Possible values include:
+                Macaddress, 2. Udid, 3. Serialnumber, 4. ImeiNumber, 5. EasId, 6. DeviceId.
+        
+  #>
+    param (        
+        [Parameter(Mandatory=$true)]
         [ValidateSet("DeviceID","Macaddress","Udid","SerialNumber","ImeiNumber","EasId")]
         [string]$SearchBy,
-        [Parameter(Mandatory=$true, Position=2)]
+        [Parameter(Mandatory=$true)]
         [string]$alternateId,
-        [Parameter(Mandatory=$true, Position=3,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers
      )
         
   
-    $WS1Device = Invoke-RestMethod -Method GET -uri https://$WS1Host/api/mdm/devices?searchby=$searchBy"&"id=$alternateId -Headers $Headers
+    $WS1Device = Invoke-RestMethod -Method GET -uri https://$($headers.ws1ApiUri)/api/mdm/devices?searchby=$searchBy"&"id=$alternateId -Headers $Headers
     return $WS1Device
 }
 
