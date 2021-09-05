@@ -17,7 +17,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 ###Creation of Headers for use with scripted API calls.
 ### 2019-07-31 - Updated for WS1 branding and include URL in header for convenience
-Function New-ws1RestConnection { 
+Function New-ws1RestConnection {
+     <#
+        .SYNOPSIS
+            (DEPRECATED CMDLET) New WS1 Connection -- This is only here for version continuity
+        .DESCRIPTION
+            (DEPRECATED CMDLET)        
+    #>
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string]$apiUri,
@@ -63,8 +69,23 @@ Function New-ws1RestConnection {
 ####Updated Auth connection to include basic, cba, oauth
 
 
-Function open-ws1RestConnection { 
+Function open-ws1RestConnection {<#
+    .SYNOPSIS
+        Opens the REST API connection to Workspace ONE
+    .DESCRIPTION
+        This cmdlet is responsible for creating the Headers that will be used with any API call to Workspace ONE
+    .EXAMPLE
+        $headers = open-ws1RestConnection -ws1ApiUri as123.awmdm.com -ws1ApiKey <aw-tenant-code> -authType basic
+    .PARAMETER headers
+        Output from select-ws1Config
+    .PARAMETER password
+        secureString
+#>
+    [CmdletBinding(DefaultParameterSetName = 'basic')]
     param (
+        [Parameter(ParameterSetName = "basic")]
+        [Parameter(ParameterSetName = "cert")]
+        [Parameter(ParameterSetName = "oauth")]
         [Parameter(Mandatory=$true)]
             [string]$ws1ApiUri,
         [Parameter(ParameterSetName = "basic", Mandatory=$true)]
@@ -73,44 +94,31 @@ Function open-ws1RestConnection {
         [Parameter(Mandatory=$true)]
             [string]
             [ValidateSet("basic","cert","oauth")]
-            $authType
+            $authType,
+        [Parameter(ParameterSetName = "basic")]
+            [string]
+            $username,
+        [Parameter(ParameterSetName = "basic")]
+            [secureString]
+            $Password
     )
 
 ###Need to add code to validate creds are entered & fail gracefully if not
 ###Parameter set info: https://blog.simonw.se/powershell-functions-and-parameter-sets/
     switch ($authType) {
         "basic" {
-
-
             ###Need to add code to validate creds are entered & fail gracefully if not
-            Do {
+        
+            if (!$username) {
                 $Credential = Get-Credential -Message "Please Enter U&P for account that has Workspace ONE API Access."
-                        
-                $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().Password)))
-            
-                #Test the Headers build
-                $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$APIKey";'Content-type' = 'application/json';'Accept' = 'application/json;version=1';'ws1ApiUri' = "$ApiUri";'ws1ApiAdmin' = "$($credential.username)"}
-                write-host -ForegroundColor Cyan "Attempting connection to the following environment: "  $apiUri "||" $headers.'aw-tenant-code'
-
-                
-                ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
-                $testWs1Connection = test-ws1RestConnection -headers $headers
-                
-                if ($testWs1Connection  -ne "FAIL") {
-                $testResults = ConvertFrom-Json $testWs1Connection.content
-                    Write-Host "Conntected to:"
-                    foreach ($api in $testResults.Resources.Workspaces) {
-                        write-host -ForegroundColor Green "          " $api.location
-                    }
-                }
-                elseif ($testWs1Connection.statusCode -eq 1005) {
-                    write-host -ForegroundColor Yellow "     Invalid Credentials for environment. Please try again."
-                }
-                else {
-                    write-host -ForegroundColor Red "Connection Failed to $headers.ws1ApiUri"
-                }
-
-            } Until ($testWs1Connection.statusCode -eq 200)
+                $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $Credential.UserName,$Credential.GetNetworkCredential().password)))
+                $username = $Credential.UserName                   
+            }
+            else {
+                $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $username,$Password)))                   
+            }
+        
+            $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$ws1ApiKey";'Content-type' = 'application/json';'Accept' = 'application/json;version=1';'ws1ApiUri' = "$ws1ApiUri";'ws1ApiAdmin' = "$username"}
         }
         "cert" {
 ###Learned from https://dexterposh.blogspot.com/2015/01/powershell-rest-api-basic-cms-cmsurl.html
@@ -119,6 +127,27 @@ Function open-ws1RestConnection {
 ###Learned from https://www.brookspeppin.com/2021/07/24/rest-api-in-workspace-one-uem/
 ###No APIKey necessary. Should put apiKey as a parameterSet
         }
+    }
+
+
+    ###Run test-ws1Connection to provide feedback on authentication
+    write-verbose "Attempting connection to the following environment: $($ws1ApiUri) || $($headers.'aw-tenant-code')"
+
+    ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
+    $testWs1Connection = test-ws1RestConnection -headers $headers
+    
+    if ($testWs1Connection  -ne "FAIL") {
+    $testResults = ConvertFrom-Json $testWs1Connection.content
+        Write-verbose "Conntected to:"
+        foreach ($api in $testResults.Resources.Workspaces) {
+            write-verbose "          " $api.location
+        }
+    }
+    elseif ($testWs1Connection.statusCode -eq 1005) {
+        write-verbose "     Invalid Credentials for environment. Please try again."
+    }
+    else {
+        write-verbose "Connection Failed to $headers.ws1ApiUri"
     }
         
 
@@ -162,11 +191,6 @@ function test-ws1RestConnection {
             
 
 
-
-
-
-
-
 <#
 ###Selection Menu - Further instructions found at : https://4sysops.com/archives/if-else-switch-conditional-statements-in-powershell/
 #>
@@ -175,7 +199,7 @@ function select-WS1Config {
    
     Do {
         Write-host "     [1] - Use existing WS1Settings file"
-        Write-Host "     [2] - Create temporary session headers and do not save API key to this computer"
+        Write-Host "     [2] - Create temporary session headers with Basic auth and do not save API key to this computer"
         write-host "     [3] - Create new WS1Config File"
         Write-Host "     [4] - Add new Environment to existing WS1settings file"
         Write-Host "     [5] - Import Existing file from old install"
@@ -190,7 +214,7 @@ function select-WS1Config {
                 2 {
                     $ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
                     $ws1ApiKey = Read-Host -Prompt "What is the API key?"
-                    $ws1RestConnection = New-ws1RestConnection -apiUri $ws1ApiUri -apikey $ws1ApiKey
+                    $ws1RestConnection = open-ws1RestConnection -ws1ApiUri $ws1ApiUri -ws1Apikey $ws1ApiKey -authType basic
                 }
                 3 {
                     Update-ws1EnvConfigFile
@@ -212,7 +236,7 @@ function select-WS1Config {
             }
         } until ($menuChoice)
     }
-    until ($ws1RestConnection -ne $null)
+    until ($null -ne $ws1RestConnection)
     return $ws1RestConnection
 }
 
@@ -233,14 +257,14 @@ function get-ws1SettingsFile {
                 Do {
                     Write-Host -ForegroundColor Yellow "     Currently detected WS1 Environments"    
                     foreach ($ws1Env in $WS1Settings) {
-                        write-host -ForegroundColor Cyan $ws1Env.ws1EnvNumber "-" $ws1Env.ws1EnvName "-" $ws1env.ws1EnvUri
+                        write-host -ForegroundColor Cyan "$($ws1Env.ws1EnvNumber) | $($ws1Env.ws1EnvName) | $($ws1env.ws1EnvUri) | $($ws1env.authType)"
                     }
                     [int]$menuChoice = read-host "Choose your environment by picking its number."
                 }
                 until ($menuChoice -le $ws1Settings.Count)
                 $choice = $WS1Settings | where-object {$_.ws1EnvNumber -eq $menuChoice}
 
-                $ws1RestConnection = New-ws1RestConnection -apiUri $choice.ws1EnvUri -apikey $choice.ws1EnvApi
+                $ws1RestConnection = open-ws1RestConnection -apiUri $choice.ws1EnvUri -apikey $choice.ws1EnvApi -authType $choice.authType
                 Return $ws1RestConnection
         }
         else {
@@ -276,6 +300,9 @@ function test-ws1EnvConfigFile {
                                 Write-Host -ForegroundColor Red "Correct Columns not found in file. Please try a different config file!"
                             }
                             elseif ($filecheck[0].psobject.Properties.name -notcontains 'ws1EnvName') {
+                                Write-Host -ForegroundColor Red "Correct Columns not found in file. Please try a different config file!"
+                            }
+                            elseif ($filecheck[0].psobject.Properties.name -notcontains 'authType') {
                                 Write-Host -ForegroundColor Red "Correct Columns not found in file. Please try a different config file!"
                             }
                             else {
@@ -316,13 +343,17 @@ param (
         [Parameter(Mandatory=$true, Position=1)]
         [string]$ws1EnvUri,
         [Parameter(Mandatory=$true, Position=2)]
-        [string]$ws1EnvApi
+        [string]$ws1EnvApi,
+        [Parameter(Mandatory=$true, Position=3)]
+            [ValidateSet("basic","cert","oauth")]
+            $ws1AuthType
         )
         $ws1Env = @(
         [pscustomobject]@{
             ws1EnvName = $ws1EnvName
             ws1EnvApi = $ws1EnvApi
             ws1EnvUri = $ws1EnvUri
+            ws1AuthType = $ws1AuthType
             }
         )
     return $ws1Env
