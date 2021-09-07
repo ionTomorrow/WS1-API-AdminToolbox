@@ -50,14 +50,14 @@ Function New-ws1RestConnection {
             $testResults = ConvertFrom-Json $testWs1Connection.content
                 Write-Host "Conntected to:"
                 foreach ($api in $testResults.Resources.Workspaces) {
-                    write-host -ForegroundColor Green "          " $api.location
+                    write-host -ForegroundColor Green "           $($api.location)"
                 }
             }
             elseif ($testWs1Connection.statusCode -eq 1005) {
                 write-host -ForegroundColor Yellow "     Invalid Credentials for environment. Please try again."
             }
             else {
-                write-host -ForegroundColor Red "Connection Failed to $headers.ws1ApiUri"
+                write-host -ForegroundColor Red "Connection Failed to $($headers.ws1ApiUri)"
             }
 
         } Until ($testWs1Connection.statusCode -eq 200)
@@ -69,7 +69,8 @@ Function New-ws1RestConnection {
 ####Updated Auth connection to include basic, cba, oauth
 
 
-Function open-ws1RestConnection {<#
+Function open-ws1RestConnection {
+    <#
     .SYNOPSIS
         Opens the REST API connection to Workspace ONE
     .DESCRIPTION
@@ -131,40 +132,77 @@ Function open-ws1RestConnection {<#
 
 
     ###Run test-ws1Connection to provide feedback on authentication
-    write-verbose "Attempting connection to the following environment: $($ws1ApiUri) || $($headers.'aw-tenant-code')"
+    Write-Host "Attempting connection to the following environment: $($ws1ApiUri) || $($headers.'aw-tenant-code')"
 
     ###Test for correct connection before returning a value. This can prevent useless API calls and prevent Directory-based auth account lockout.
     $testWs1Connection = test-ws1RestConnection -headers $headers
     
-    if ($testWs1Connection  -ne "FAIL") {
-    $testResults = ConvertFrom-Json $testWs1Connection.content
-        Write-verbose "Conntected to:"
-        foreach ($api in $testResults.Resources.Workspaces) {
-            write-verbose "          " $api.location
-        }
-    }
-    elseif ($testWs1Connection.statusCode -eq 1005) {
-        write-verbose "     Invalid Credentials for environment. Please try again."
-    }
-    else {
-        write-verbose "Connection Failed to $headers.ws1ApiUri"
-    }
-        
 
         
     return $headers
 }
 
 
+function get-ws1SystemInfo {
+    <#
+    .SYNOPSIS
+        Retrieves information about WS1 platform
+    .DESCRIPTION
+        https://cn1506.awmdm.com/api/help/#!/apis/10008?/Info    
+    .PARAMETER headers
+        Output from select-ws1Config
+    #>
+    [CmdletBinding()]
+    param (
+        [Hashtable]$headers
+        )
+    try {        
+        if ($PSBoundParameters['verbose']) {
+            $ws1connection = Invoke-WebRequest -Uri https://$($headers.ws1ApiUri)/api/system/info -Headers $headers
+        }
+        else {
+            $ws1connection = Invoke-RestMethod -Uri https://$($headers.ws1ApiUri)/api/system/info -Headers $headers
+        }
+    }
+    catch [System.Net.WebException]
+    {
+        ###error
+    }
+    return $ws1connection
+}
 
 
 ###Validate current connection is OK before continuing any script. This will prevent account lockout when entinering incorrect credentials
 function test-ws1RestConnection {
+    <#
+    .SYNOPSIS
+        Performs a test of the current WS1 Headers
+    .DESCRIPTION
+        Performs a test of the Headers by accessing the Info API
+
+        https://cn1506.awmdm.com/api/help/#!/apis/10008?/Info    
+    .PARAMETER headers
+        Output from select-ws1Config
+    #>
     param (
         [Hashtable]$headers
         )        
     Try {
-        $ws1connection = Invoke-WebRequest -Uri https://$($headers.ws1ApiUri)/api/system/info -Headers $headers
+        [string]$testStatus
+        [string]$testMessage
+        [int]$testCode
+        $ws1connection = get-ws1SystemInfo -headers $headers -Verbose
+        if ($ws1connection.statusCode -eq 200) {
+            $testCode = $ws1connection.statusCode
+            $testStatus = "success"
+            $testMessage = "Connection Established at $($ws1connection.headers.Date). API Calls reamining $($ws1connection.headers.'X-RateLimit-Remaining')"
+            $testCode = 200
+            Write-Host "Conntected to:"
+            foreach ($api in $testResults.Resources.Workspaces) {
+                write-host -ForegroundColor Green "          $($api.location)"
+            }
+        }               
+                    
     }
     Catch  [System.Net.WebException] {
         if ($_.ErrorDetails) {
@@ -172,20 +210,13 @@ function test-ws1RestConnection {
         }
         else {
             $errorEvent = $_.Exception
-        }
-        if ($ws1connection.statusCode -eq "200") {
-            ###Connection is OK            
-        }
-        elseif  ($errorEvent.errorCode -eq "1005") {
-
-            write-host -ForegroundColor Red "'Error Validating Credentials. Please enter credentials again. Script will fail to prevent lockout after 3 tries"
-            $ws1connection = $errorEvent.errorCode
-        }
-        else {
-            $ws1connection = "FAIL"
-        }
+        }        
+        $testStatus = "FAIL"
+        $testCode = $errorEvent.errorCode
+        $testMessage = $errorEvent.message        
     }
-    return $ws1connection
+    $testReturn = New-Object psobject @{"testStatus"=$testStatus;"testCode"=$testCode;"testMessage"=$testMessage}
+    return $testReturn
 
 }
             
@@ -196,10 +227,20 @@ function test-ws1RestConnection {
 #>
 
 function select-WS1Config {
-   
+   <#
+    .SYNOPSIS
+        Interactive menu to create required headers
+    .DESCRIPTION
+        Performs a test of the Headers by accessing the Info API
+
+        https://cn1506.awmdm.com/api/help/#!/apis/10008?/Info    
+    .PARAMETER headers
+        Output from select-ws1Config
+    #>
+
     Do {
         Write-host "     [1] - Use existing WS1Settings file"
-        Write-Host "     [2] - Create temporary session headers with Basic auth and do not save API key to this computer"
+        Write-Host "     [2] - Create temporary session headers and do not save API information to this computer"
         write-host "     [3] - Create new WS1Config File"
         Write-Host "     [4] - Add new Environment to existing WS1settings file"
         Write-Host "     [5] - Import Existing file from old install"
@@ -212,8 +253,8 @@ function select-WS1Config {
                     $ws1RestConnection = get-ws1SettingsFile
                 }
                 2 {
-                    $ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
-                    $ws1ApiKey = Read-Host -Prompt "What is the API key?"
+                    [string]$ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
+                    [string]$ws1ApiKey = Read-Host -Prompt "What is the API key?"
                     $ws1RestConnection = open-ws1RestConnection -ws1ApiUri $ws1ApiUri -ws1Apikey $ws1ApiKey -authType basic
                 }
                 3 {
@@ -264,7 +305,7 @@ function get-ws1SettingsFile {
                 until ($menuChoice -le $ws1Settings.Count)
                 $choice = $WS1Settings | where-object {$_.ws1EnvNumber -eq $menuChoice}
 
-                $ws1RestConnection = open-ws1RestConnection -apiUri $choice.ws1EnvUri -apikey $choice.ws1EnvApi -authType $choice.authType
+                $ws1RestConnection = open-ws1RestConnection -ws1ApiUri $choice.ws1EnvUri -ws1Apikey $choice.ws1EnvApi -authType $choice.authType
                 Return $ws1RestConnection
         }
         else {
@@ -384,24 +425,25 @@ function Update-ws1EnvConfigFile {
             ###Create New File and then return as an object.
             1 {
                 write-host -ForegroundColor Yellow "Creating Workspace ONE config file under \config folder. Please answer the following questions:"
-                $ws1EnvName = read-host -prompt "Please type an easy-to remember name for the environment (UAT,PROD,etc.)"
-                $ws1EnvApi = read-host -Prompt "Please type or paste your API KEY"
-                $ws1EnvUri = read-host -Prompt "Please input the URL you are connecting to (example: xx123.awmdm.com)"
+                [string]$ws1EnvName = read-host -prompt "Please type an easy-to remember name for the environment (UAT,PROD,etc.)"
+                [string]$ws1EnvApi = read-host -Prompt "Please type or paste your API KEY"
+                [string]$ws1EnvUri = read-host -Prompt "Please input the URL you are connecting to (example: xx123.awmdm.com)"
+                [string]$authType = read-host -Prompt "What authentication type will you use? (basic, cert, oauth)"
                 $ws1EnvConfigFile = "config\ws1EnvConfig.csv"
-                $ws1EnvConfigPath = "config"
+                
                 $i=0
                 if (Test-Path $ws1EnvConfigFile) {
                     write-host "Appending new environment to existing settings config"
                     $i = (import-csv $ws1EnvConfigFile).count
                 }
                 else {
-                    $WS1Example = New-Object psobject -Property @{ws1EnvNumber=$i;ws1EnvName="ExampleEnvironment";ws1EnvApi="ExampleAPI";ws1EnvUri="ExampleURI"}
+                    $WS1Example = New-Object psobject -Property @{ws1EnvNumber=$i;ws1EnvName="ExampleEnvironment";ws1EnvApi="ExampleAPI";ws1EnvUri="ExampleURI";authType="authentication type"}
                     New-Item -Path "config"-Name "ws1EnvConfig.csv" -ItemType File
                     $WS1Example | Export-Csv -Path $WS1EnvConfigFile -NoTypeInformation -Append
                     $i++
                 }
                 
-                $WS1Env = New-Object psobject -Property @{ws1EnvNumber=$i;ws1EnvName=$ws1EnvName;ws1EnvApi=$ws1EnvApi;ws1EnvUri=$ws1EnvUri}
+                $WS1Env = New-Object psobject -Property @{ws1EnvNumber=$i;ws1EnvName=$ws1EnvName;ws1EnvApi=$ws1EnvApi;ws1EnvUri=$ws1EnvUri;authType=$authType}
                 $WS1Env | Export-Csv -Path $WS1EnvConfigFile -NoTypeInformation -append
                 $ws1EnvConfig = "config\ws1EnvConfig.csv"
                 
@@ -416,7 +458,7 @@ function Update-ws1EnvConfigFile {
             }
         }
     }
-    until ($ws1EnvConfig -ne $null)
+    until ($null -ne $ws1EnvConfig)
 
 }
 
