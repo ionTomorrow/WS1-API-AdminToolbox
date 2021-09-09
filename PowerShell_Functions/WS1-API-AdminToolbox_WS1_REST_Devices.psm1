@@ -142,6 +142,7 @@ Retrieve *all* devices from an Environment
     2021-04-12 - Brian@BrianDeyo.us         Updated Query string to use function
 #>
 Function Search-ws1Devices {
+    [CmdletBinding()]
     param(
         [Parameter(mandatory=$false, Position=0)][string]$user,
         [Parameter(mandatory=$false, Position=1)][string]$model,
@@ -160,17 +161,28 @@ Function Search-ws1Devices {
     )
 
     [hashtable]$stringBuild = @{}
+    if (!$page) {$page=0}
+    if (!$pageSize) {$pageSize=50}
+    
     $parameterList= @("user","model","platform","lastSeen","ownership","lgId","compliantStatus","seenSince","page","pageSize","orderBy","sortOrder","allRecords")
     $parameterList.foreach({
         $param = Get-Variable $_ -ErrorAction SilentlyContinue
-        if ($param) {$stringBuild.Add("$($param.name)",$param.Value)}
+        if ($PSBoundParameters.ContainsKey($param)) {$stringBuild.Add("$($param.name)",$param.Value)}
     })   
     $searchUri = "https://$($headers.ws1ApiUri)/api/mdm/devices/search"
     $uri = New-HttpQueryString -Uri $searchUri -QueryParameter $stringBuild    
     
-    $device = $null
-    $device = Invoke-RestMethod -Method GET -Uri $uri -Headers $headers
-    return $device.Devices
+
+    switch ($PSBoundParameters['verbose']) {
+        ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -eq $true) {
+            $deviceSearch = Invoke-WebRequest -method GET -Uri $uri -Headers $headers
+        }
+        default {
+            $deviceSearch = Invoke-RestMethod -method GET -Uri $uri -Headers $headers        
+        }
+    }
+    
+    return $deviceSearch
 }
 
 
@@ -192,7 +204,7 @@ Function Clear-ws1Device {
             Retrieve Device Details for more than a single device. Useful to reduce total number of API queries. This is intended for use from a script and not necessarily useful from the command line itself.
         .EXAMPLE
             Get-WS1BulkDevice -WS1Host xx123.awmdm.com -searchBy SerialNumber -bulkIdList (ARRAY OBJECT) "Asset123" -ownership "CorporateShared" -headers (HeaderHashTable)
-        .PARAMETER awHost
+        .PARAMETER ws1Host
             The URL to your API server. You can also use the Console URL
         .PARAMETER searchBy
             Unique Identifier used to specify which devices to delete. Possible values include : MacAddress,UDID,SerialNumber, DeviceID, IMEI
@@ -450,7 +462,7 @@ Function set-ws1deviceMangedSettings {
 
 
 <# Delete multiple devices #>
-Function Remove-BulkWS1Device {
+Function Remove-ws1BulkDevice {
     <#
     .SYNOPSIS
     Bulk Delete devices

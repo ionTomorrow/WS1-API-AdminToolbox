@@ -15,7 +15,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ###############################
 
 
-Function Find-CustomerOGID {
+Function Find-ws1CustomerOGID {
     param (
         [Parameter(Mandatory=$true, Position=2,ValueFromPipelineByPropertyName=$true)]
         [Hashtable]$headers

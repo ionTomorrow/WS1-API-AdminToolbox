@@ -100,8 +100,15 @@ Function open-ws1RestConnection {
             [string]
             $username,
         [Parameter(ParameterSetName = "basic")]
+        [Parameter(ParameterSetName = "cert")]
             [secureString]
-            $Password
+            $Password,
+        [Parameter(ParameterSetName = "cert")]
+            [System.IO.FileSystemInfo]
+            $certFilename,
+        [Parameter(ParameterSetName = "cert")]
+            [securestring]
+            $certPassword
     )
 
 ###Need to add code to validate creds are entered & fail gracefully if not
@@ -116,13 +123,22 @@ Function open-ws1RestConnection {
                 $username = $Credential.UserName                   
             }
             else {
-                $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $username,$Password)))                   
+                $EncodedUsernamePassword = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($('{0}:{1}' -f $username,(ConvertFrom-SecureString -AsPlainText $Password))))                   
             }
         
             $headers = @{'Authorization' = "Basic $($EncodedUsernamePassword)";'aw-tenant-code' = "$ws1ApiKey";'Content-type' = 'application/json';'Accept' = 'application/json;version=1';'ws1ApiUri' = "$ws1ApiUri";'ws1ApiAdmin' = "$username"}
         }
         "cert" {
-###Learned from https://dexterposh.blogspot.com/2015/01/powershell-rest-api-basic-cms-cmsurl.html
+            <###Learned from https://dexterposh.blogspot.com/2015/01/powershell-rest-api-basic-cms-cmsurl.html
+                This needs to be cleaned up to add error checking
+            #>
+            
+            if (!$certFilename) {
+                $certFilename = (get-childitem (read-host "What is the path to the cert you downloaded from WS1? (.p12 format)"))
+                [secureString]$certPassword = read-host -AsSecureString "What is the password for the certificate? (will be entered as a SecureString)"
+                Get-ChildItem $certFilename
+            }
+            $global:ws1Certificate = Get-PfxCertificate -FilePath $certFilename -Password $certPassword
         }
         "oauth" {
 ###Learned from https://www.brookspeppin.com/2021/07/24/rest-api-in-workspace-one-uem/
@@ -156,12 +172,16 @@ function get-ws1SystemInfo {
     param (
         [Hashtable]$headers
         )
-    try {        
+    try {
+        [uri]$uri = "https://$($headers.ws1ApiUri)/api/system/info"
+
+
+
         if ($PSBoundParameters['verbose']) {
-            $ws1connection = Invoke-WebRequest -Uri https://$($headers.ws1ApiUri)/api/system/info -Headers $headers
+            $ws1connection = Invoke-WebRequest -Uri $uri -Headers $headers
         }
         else {
-            $ws1connection = Invoke-RestMethod -Uri https://$($headers.ws1ApiUri)/api/system/info -Headers $headers
+            $ws1connection = Invoke-RestMethod -Uri $uri -Headers $headers
         }
     }
     catch [System.Net.WebException]
@@ -198,6 +218,7 @@ function test-ws1RestConnection {
             $testMessage = "Connection Established at $($ws1connection.headers.Date). API Calls reamining $($ws1connection.headers.'X-RateLimit-Remaining')"
             $testCode = 200
             Write-Host "Conntected to:"
+            $testResults = (ConvertFrom-Json $ws1connection)
             foreach ($api in $testResults.Resources.Workspaces) {
                 write-host -ForegroundColor Green "          $($api.location)"
             }
@@ -549,4 +570,69 @@ $body = $device
 $eventTest = Invoke-WebRequest -Method Post -Uri $ws1EventListenerUri -body (convertto-json $body) -headers $headers
 
 return $eventTest
+}
+
+
+function convertTo-ws1CertAuth {
+    <#
+     .SYNOPSIS
+            Converts existing Headers from the select-ws1Config cmdlet to use the CMSURL certificate-based authentication scheme
+        .DESCRIPTION
+            Certificate-based authentication (CBA) is superior to basic authentication in several ways.
+            * More secure
+            * Doesn't expose password in 'Authorization' header
+            * WS1 admin passwords on Basic accounts expire within 60-90 days
+            
+            The use of CBA in Workspace ONE will require each cmdlet to individually convert the headers to use CMSURl. This is due to the URI itself being part of the header.
+            This function will be called within any other function that is flagged as using CBA.
+
+            Thank you to Dexter Posh for documenting this capability:
+            https://dexterposh.blogspot.com/2015/01/powershell-rest-api-basic-cms-cmsurl.html
+        .EXAMPLE
+            $headers = convertTo-ws1CertAuth -headers $headers -Certificate <object> -uri <uri>
+        .PARAMETER headers
+            Output from select-ws1Config
+        .PARAMETER Certificate
+            A certificate of type [System.Security.Cryptography.X509Certificates.X509Certificate]
+            This can be obtained using the open-ws1RestConnection cmdlet and specifying -authType Cert
+        .PARAMETER uri
+            This is the URL of the API call that needs to be made. The .AbsolutePath property of the URI is included in the header generation
+    
+    #>
+
+    param (          
+        [Parameter(Mandatory=$true)]
+            [System.Security.Cryptography.X509Certificates.X509Certificate]$Certificate,
+        [Parameter(Mandatory=$true)]
+            [uri]$uri,
+        [Parameter(Mandatory=$true)]
+            [hashtable]
+            $headers
+    )
+
+    #Open Memory Stream passing the encoded bytes
+    $memstream = New-Object -TypeName System.Security.Cryptography.Pkcs.ContentInfo -ArgumentList (,$bytes) -ErrorAction Stop
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes(($uri.absolutePath))
+
+    #Create the Signed CMS Object providing the ContentInfo (from Above) and True specifying that this is for a detached signature
+    $SignedCMS = New-Object -TypeName System.Security.Cryptography.Pkcs.SignedCms -ArgumentList $MemStream,$true -ErrorAction Stop
+
+    #Create an instance of the CMSigner class - this class object provide signing functionality
+    $CMSigner = New-Object -TypeName System.Security.Cryptography.Pkcs.CmsSigner -ArgumentList $Certificate -Property @{IncludeOption = [System.Security.Cryptography.X509Certificates.X509IncludeOption]::EndCertOnly} -ErrorAction Stop
+
+    #Add the current time as one of the signing attribute
+    $null = $CMSigner.SignedAttributes.Add((New-Object -TypeName System.Security.Cryptography.Pkcs.Pkcs9SigningTime))
+
+    #Compute the Signatur
+    $SignedCMS.ComputeSignature($CMSigner)
+
+    #As per the documentation the authorization header needs to be in the format 'CMSURL `1 <Signed Content>'
+    #One can change this value as per the format the Vendor's REST API documentation wants.
+    $CMSHeader = '{0}{1}{2}' -f 'CMSURL','`1 ',$([System.Convert]::ToBase64String(($SignedCMS.Encode())))
+
+    $headers.Remove('Authorization')
+    $headers.add('Authorization',$CMSHeader)
+
+    return $headers
+
 }
