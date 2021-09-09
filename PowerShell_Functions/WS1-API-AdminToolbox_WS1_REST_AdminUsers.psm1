@@ -55,7 +55,8 @@ function find-ws1AdminUser {
         [Parameter(Mandatory=$false, Position=9)][ValidateSet("ASC","DESC")][string]$sortOrder,
         [Parameter(Mandatory=$false, Position=9)][ValidateSet("Active","Inactive")][string]$status,
         [Parameter(Mandatory=$false, Position=10)][ValidateSet(1,2)][int]$ws1APIVersion,
-        [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers
+        [Parameter(Mandatory=$true, Position=10,ValueFromPipelineByPropertyName=$true)][Hashtable]$headers,
+        [Parameter(Mandatory=$false)][switch]$CertificateAuth
     )
       
         [hashtable] $stringBuild =@{}
@@ -75,9 +76,14 @@ function find-ws1AdminUser {
         $searchUri = "https://$($headers.ws1ApiUri)/api/system/admins/search"
         $uri = New-HttpQueryString -Uri $searchUri -QueryParameter $stringBuild
 
-        #verbose
-        switch ($PSBoundParameters['Verbose']) {
-            ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent -eq $true) {
+        if ($CertificateAuth.IsPresent)
+            {
+               $headers = convertTo-ws1CertificateAuthentication -uri $uri -headers -$headers
+            }
+
+        #debug
+        switch ($PSBoundParameters['verbose']) {
+            ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -eq $true) {
                 $adminSearch = Invoke-WebRequest -method GET -Uri $uri -Headers $headers
             }
             default {

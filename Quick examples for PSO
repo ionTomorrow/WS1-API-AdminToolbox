@@ -1,0 +1,22 @@
+<#
+    Basic into to API toolbox cmdlets
+#>
+
+
+
+$headers = select-ws1Config
+
+OR
+
+$username = "mobile@briandeyo.us"
+$password = read-host -AsSecureString
+
+$headers = open-ws1RestConnection -ws1ApiUri as1506.awmdm.com -ws1ApiKey "bh4csnDauGPXEtmsW3Ql6CzJkQBrWYMRGIEZDo+b9Vw=" -authType basic -username $username -Password $password
+
+$customerOG = Find-ws1CustomerOGID -headers $headers
+
+get-ws1DeviceCount -ogId $customerOG -headers $headers
+
+Search-ws1Devices -lgid $customerOG -headers $headers
+
+Search-ws1Devices -lgid $customerOG -headers $headers -Verbose

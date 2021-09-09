@@ -17,9 +17,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
 Function Search-WS1Tags {
-    param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
+    param(        
         [Parameter(Mandatory=$false, Position=1)]
         [string]$tagName,
         [Parameter(Mandatory=$false, Position=2)]
@@ -40,7 +38,7 @@ Function Search-WS1Tags {
             $searchString = "name=$tagname"
         }
         if (!$GroupID) {
-            $GroupID = Find-CustomerOGID -WS1Host $WS1Host -headers $headers
+            $GroupID = Find-ws1CustomerOGID -headers $headers
             $searchString = "organizationgroupid=$GroupID"
             }
         else {
@@ -77,7 +75,7 @@ Function Search-WS1Tags {
             }
         }
         
-        $WS1TagList = Invoke-RestMethod -Method GET -Uri https://$WS1Host/api/mdm/tags/search?$searchString -Headers $headers
+        $WS1TagList = Invoke-RestMethod -Method GET -Uri https://$($headers.ws1ApiUri)/api/mdm/tags/search?$searchString -Headers $headers
         return $WS1TagList
 }
 
