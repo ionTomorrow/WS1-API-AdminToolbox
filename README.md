@@ -1,9 +1,12 @@
 The primary purpose of this project is to create a set of reuseable cmdlets to interact with the WS1 API via PowerShell. 
-I have seen a lot of great scripts put online, but one thing I see in common is they all spend a lot of unnecessary effort re-creating basic functions. 
+There are many great scripts put online, but one thing in common is they all spend a lot of unnecessary effort re-creating basic functions. 
 The publicly available APIs from VMware are reasonably well-documented and contain clearly known parameters.
 
 The goal for this is to reduce the time for a WS1 admin to write scripts for their environment.
 Let's focus on getting things done and not creating 10 ways to do the same thing.
+
+
+This effort is community-driven and supported.
 
 
 These updated functions are intended to work with PowerShell Core. Please install that before you try to use the functions in these modules! https://github.com/PowerShell/PowerShell
