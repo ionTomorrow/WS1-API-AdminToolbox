@@ -6,7 +6,7 @@ The goal for this is to reduce the time for a WS1 admin to write scripts for the
 Let's focus on getting things done and not creating 10 ways to do the same thing.
 
 
-This effort is community-driven and supported.
+## NOTE: This effort is community-driven and supported. Please perform due diligence and review code and consider this before running in a production environment. These cmdlets are frequently being improved and may not function as expected. Always test your code in a non-production environment first!
 
 
 These updated functions are intended to work with PowerShell Core. Please install that before you try to use the functions in these modules! https://github.com/PowerShell/PowerShell
