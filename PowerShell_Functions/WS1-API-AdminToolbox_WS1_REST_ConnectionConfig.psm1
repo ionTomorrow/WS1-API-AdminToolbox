@@ -88,7 +88,7 @@ Function open-ws1RestConnection {
         [Parameter(ParameterSetName = "cert")]
         [Parameter(ParameterSetName = "oauth")]
         [Parameter(Mandatory=$true)]
-            [string]$ws1ApiUri,
+            [uri]$ws1ApiUri,
         [Parameter(ParameterSetName = "basic", Mandatory=$true)]
         [Parameter(ParameterSetName = "cert", Mandatory=$true)]
             [string]$ws1ApiKey,
@@ -108,11 +108,27 @@ Function open-ws1RestConnection {
             $certFilename,
         [Parameter(ParameterSetName = "cert")]
             [securestring]
-            $certPassword
+            $certPassword,
+        [Parameter(ParameterSetName = "oauth", Mandatory=$true)]
+            [string]
+            $client_Id,
+        [Parameter(ParameterSetName = "oauth", Mandatory=$true)]
+            [securestring]
+            $client_Secret,
+        [Parameter(ParameterSetName = "oauth", Mandatory=$true)]
+            [uri]
+            $oauthAccessTokenUrl
     )
 
 ###Need to add code to validate creds are entered & fail gracefully if not
 ###Parameter set info: https://blog.simonw.se/powershell-functions-and-parameter-sets/
+
+    ###Process ws1EnvUri to validate it is a good URI
+    if ($ws1ApiUri.Scheme -ne "https") {
+        [uri]$ws1ApiUri = "https://"+$ws1ApiUri
+    }
+    $ws1ApiUri = $ws1ApiUri.Host
+
     switch ($authType) {
         "basic" {
             ###Need to add code to validate creds are entered & fail gracefully if not
@@ -141,8 +157,31 @@ Function open-ws1RestConnection {
             $global:ws1Certificate = Get-PfxCertificate -FilePath $certFilename -Password $certPassword
         }
         "oauth" {
-###Learned from https://www.brookspeppin.com/2021/07/24/rest-api-in-workspace-one-uem/
-###No APIKey necessary. Should put apiKey as a parameterSet
+            ###Credit to Brooks Peppin for a good write-up https://www.brookspeppin.com/2021/07/24/rest-api-in-workspace-one-uem/           
+            $oauthToken = $null
+            
+            $body = @{'grant_type' = "client_credentials";'client_id' = "$client_id";'client_secret' = (ConvertFrom-SecureString -AsPlainText $client_secret)}
+
+
+            
+            try {
+                #write-host "Client_Secret" $body.client_secret
+                #Write-Verbose "Client_ID" $body.client_Id
+                #write-Verbose "grant_type" $body.grant_type
+
+                #Write-Verbose "Connecting to $($oauthAccessTokenUrl)"
+                $oauthToken = Invoke-RestMethod -Method POST -uri $oauthAccessTokenUrl.AbsoluteUri -Body $body
+                
+            }
+            catch [Exception] {
+                Write-Error "Unable to retrieve token from: $($oauthAccessTokenUrl)"
+            }
+            
+            #[string]$oauthString = "{0} {1}" -f $oauthToken.token_type,$oauthToken.access_token
+            [string]$oauthString = $oauthToken.token_type,$oauthToken.access_token -join " "
+            
+            
+            $headers = @{'Authorization'=$oauthString;'Accept'='application/json;version=1';'ws1ApiUri'="$($ws1ApiUri)";'ws1ApiAdmin'="$($client_Id)";'oauthTokenExpiration'=((Get-date).AddSeconds(3600))}
         }
     }
 
