@@ -18,7 +18,7 @@ function select-WS1Config {
  
      Do {
          Write-host "     [1] - Use existing WS1Settings file"
-         Write-Host "     [2] - Create temporary session headers and do not save API information to this computer"
+         Write-Host "     [2] - Create temporary BASIC session headers and do not save API information to this computer"
          write-host "     [3] - Create new WS1Config File"
          Write-Host "     [4] - Add new Environment to existing WS1settings file"
          Write-Host "     [5] - Import Existing file from old install"
@@ -37,7 +37,7 @@ function select-WS1Config {
                  2 {
                      ###Obtain basic information to start an API session. 
                      ###Not including -username will force cmdlet to prompt for U&P
-                     [string]$ws1ApiUri = read-host -Prompt "What is the API uri (example asXXX.awmdm.com?)"
+                     [uri]$ws1ApiUri = read-host -Prompt "What is the full API URL (example https://asXXX.awmdm.com)"
                      [string]$ws1ApiKey = Read-Host -Prompt "What is the API key?"
                      $ws1RestConnection = open-ws1RestConnection -ws1ApiUri $ws1ApiUri -ws1Apikey $ws1ApiKey -authType basic
                  }
@@ -83,6 +83,14 @@ function get-ws1SettingsFile {
                 until ($menuChoice -le $ws1Settings.Count)
                 #$choice = $WS1Settings | where-object {$_.ws1EnvNumber -eq $menuChoice}
                 $ws1Env = $ws1settings[$menuChoice]
+
+                ###Must check quality of input file. If someone manually edited the file it would cause downstream issues:
+                #Check validity of all columns
+
+                ###Parse the $ws1EnvUri and make sure it is a URL. This will take the string found in the .csv and convert it to a correct URL, and then pull out the .Host parameter to pass along as output
+                if ($ws1Env.ws1EnvUri.SubString(0,7) -ne "https://") {
+                    $ws1Env.ws1EnvUri = "https://"+$ws1Env.ws1EnvUri
+                }
         }
         else {
             Update-ws1EnvConfigFile
@@ -201,8 +209,12 @@ function Update-ws1EnvConfigFile {
                 write-host -ForegroundColor Yellow "Creating Workspace ONE config file under \config folder. Please answer the following questions:"
                 [string]$ws1EnvName = read-host -prompt "Please type an easy-to remember name for the environment (UAT,PROD,etc.)"
                 [string]$ws1EnvApi = read-host -Prompt "Please type or paste your API KEY"
-                [string]$ws1EnvUri = read-host -Prompt "Please input the URL you are connecting to (example: xx123.awmdm.com)"
-                [string]$authType = read-host -Prompt "What authentication type will you use? (basic, cert, oauth)"
+                do {
+                    [uri]$ws1EnvUri = read-host -Prompt "Please input the URL you are connecting to (example: https://asXXX.awmdm.com)"
+                    if ($nul -eq $ws1EnvUri.host) {Write-Error "You must include the https:// scheme with your URL!"}
+                }
+                Until ($nul -ne $ws1EnvUri.host)
+                [string][ValidateSet("basic","cert","oauth")]$authType = read-host -Prompt "What authentication type will you use? (basic, cert, oauth)"
                 $ws1EnvConfigFile = "config\ws1EnvConfig.csv"
                 
                 $i=0
