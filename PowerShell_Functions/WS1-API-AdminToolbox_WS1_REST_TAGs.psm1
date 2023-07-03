@@ -1,4 +1,15 @@
-﻿###############################
+﻿<#
+Copyright 2016-2021 Brian Deyo
+Copyright 2021 VMware, Inc.
+SPDX-License-Identifier: MPL-2.0
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#>
+
+
+###############################
 ###
 ###  TAG CMDLETS
 ###
@@ -6,9 +17,7 @@
 
 
 Function Search-WS1Tags {
-    param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$WS1Host,
+    param(        
         [Parameter(Mandatory=$false, Position=1)]
         [string]$tagName,
         [Parameter(Mandatory=$false, Position=2)]
@@ -29,7 +38,7 @@ Function Search-WS1Tags {
             $searchString = "name=$tagname"
         }
         if (!$GroupID) {
-            $GroupID = Find-CustomerOGID -WS1Host $WS1Host -headers $headers
+            $GroupID = Find-ws1CustomerOGID -headers $headers
             $searchString = "organizationgroupid=$GroupID"
             }
         else {
@@ -66,7 +75,7 @@ Function Search-WS1Tags {
             }
         }
         
-        $WS1TagList = Invoke-RestMethod -Method GET -Uri https://$WS1Host/api/mdm/tags/search?$searchString -Headers $headers
+        $WS1TagList = Invoke-RestMethod -Method GET -Uri https://$($headers.ws1ApiUri)/api/mdm/tags/search?$searchString -Headers $headers
         return $WS1TagList
 }
 

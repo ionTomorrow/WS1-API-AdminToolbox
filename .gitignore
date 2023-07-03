@@ -1,0 +1,7 @@
+*.csv
+*.cer
+config/
+output/
+input/
+.vscode/
+.DS_Store

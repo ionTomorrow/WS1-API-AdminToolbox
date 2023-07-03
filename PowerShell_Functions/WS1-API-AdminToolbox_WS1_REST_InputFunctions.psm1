@@ -1,4 +1,15 @@
-﻿Function Import-WS1Csv {
+﻿<#
+Copyright 2016-2021 Brian Deyo
+Copyright 2021 VMware, Inc.
+SPDX-License-Identifier: MPL-2.0
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#>
+
+
+Function Import-WS1Csv {
     <#.SYNOPSIS
     Imports a .csv and obtains specific characteristics of the .csv useable for WS1 scripts and functions
     .DESCRIPTION
