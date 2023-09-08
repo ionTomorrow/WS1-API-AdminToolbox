@@ -88,7 +88,7 @@ function get-ws1SettingsFile {
                 #Check validity of all columns
 
                 ###Parse the $ws1EnvUri and make sure it is a URL. This will take the string found in the .csv and convert it to a correct URL, and then pull out the .Host parameter to pass along as output
-                if ($ws1Env.ws1EnvUri.SubString(0,7) -ne "https://") {
+                if ($ws1Env.ws1EnvUri.SubString(0,8) -ne "https://") {
                     $ws1Env.ws1EnvUri = "https://"+$ws1Env.ws1EnvUri
                 }
         }
