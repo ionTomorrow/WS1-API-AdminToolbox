@@ -124,9 +124,7 @@ Function open-ws1RestConnection {
 ###Parameter set info: https://blog.simonw.se/powershell-functions-and-parameter-sets/
 
     ###Process ws1EnvUri to validate it is a good URI
-    if ($ws1ApiUri.Scheme -ne "https") {
-        [uri]$ws1ApiUri = "https://"+$ws1ApiUri
-    }
+   
     $ws1ApiUri = $ws1ApiUri.Host
 
     switch ($authType) {
