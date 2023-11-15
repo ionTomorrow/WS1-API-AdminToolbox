@@ -689,3 +689,60 @@ function set-ws1DeviceNote {
     )
 }
 
+function set-ws1DeviceRegistration {
+    <#.SYNOPSIS
+    Register a device to the specified enrollment user.
+    .DESCRIPTION
+    This cmdlet can be used with DEP or non-DEP devices to register them in the console and generate an enrollment token.
+    
+    .EXAMPLE
+    set-ws1DeviceRegistration
+    .PARAMETER deviceId
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true,Position=0)][int]$userId,
+        [Parameter(mandatory=$true, Position=1)][int]$locationGroupId,
+        [Parameter(mandatory=$false, Position=2)][string]$friendlyName,
+        [Parameter(mandatory=$false, Position=3)][string]$ownership,
+        [Parameter(mandatory=$false, Position=4)][int]$platformId,
+        [Parameter(mandatory=$false, Position=5)][int]$osId,
+        [Parameter(mandatory=$false, Position=6)][string]$udid,
+        [Parameter(mandatory=$false, Position=7)][string]$serialNumber,
+        [Parameter(mandatory=$false, Position=8)][string]$imei,
+        [Parameter(mandatory=$false, Position=9)][string]$assetNumber,
+        [Parameter(mandatory=$false, Position=10)][int]$messageType,
+        [Parameter(mandatory=$false, Position=11)][string]$messageTemplateID,
+        [Parameter(mandatory=$false, Position=12)][string]$sim,
+        [Parameter(mandatory=$false, Position=13)][string]$toEmailAddress,
+        [Parameter(mandatory=$false, Position=14)][string]$toPhoneNumber,
+        [Parameter(mandatory=$false, Position=15)][array]$tags,
+        [Parameter(mandatory=$false, Position=16)][string]$customAttributes,
+        [Parameter(mandatory=$false, Position=17)][bool]$isMigration,
+        [Parameter(mandatory=$false, Position=18)][string]$uuid,   
+        [Parameter(mandatory=$true, Position=19)][hashtable]$headers
+    )
+
+    ### Creation of JSON payload
+        [hashtable]$body = @{}
+        $parameterList= @("locationGroupId","friendlyName","ownership","platformId","osId","udid","serialNumber","imei","assetNumber","messageType","messageTemplateId","sim","toEmailAddress","toPhoneNumber","tags","customAttributes","isMigration","uuid")
+        foreach ($param in $parameterList) {
+            if ($PSBoundParameters.ContainsKey("$($param)")) {
+                write-host "Key found!"
+                $body.add($param,$PSCmdlet.MyInvocation.BoundParameters[$param])
+                
+            }
+        }
+
+    $Uri = "https://$($headers.ws1ApiUri)/api/system/users/$($userId)/registerdevice"   
+
+    switch ($PSBoundParameters['verbose']) {
+        ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -eq $true) {
+            $registration = Invoke-WebRequest -method POST -Uri $uri -body (convertTo-Json $body) -Headers $headers
+        }
+        default {
+            $registration = Invoke-RestMethod -method POST -Uri $uri -body (convertTo-Json $body) -Headers $headers        
+        }
+    }
+    return $registration
+}
