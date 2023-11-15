@@ -81,6 +81,7 @@ Functions in each script can have their help contents retrieved like other cmdle
 * move-ws1Device
 * get-ws1DeviceCount
 * update-ws1DeviceOutput
+* set-ws1DeviceRegistration
 ```
 
 ## InputFunctions
